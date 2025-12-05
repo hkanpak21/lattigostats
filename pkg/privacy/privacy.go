@@ -1,386 +1,434 @@
-package privacy
-// Package privacy implements DDIA privacy inspection and policy enforcement.
+// Package privacy provides DDIA privacy inspection and policy enforcement
+// for decrypted statistical results.
 package privacy
 
 import (
 	"encoding/json"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return rawCounts, nil	}		return transformed, nil	if transformed, ok := result.TransformedVal.(map[string]int64); ok {	// Return the transformed (possibly suppressed) counts	}		return nil, fmt.Errorf("privacy inspection failed: %s", result.Reason)	if !result.Approved {	}		return nil, err	if err != nil {	result, err := p.inspector.InspectContingencyTable(rawCounts, jobID, columns)	// Inspect the contingency table) (map[string]int64, error) {	columns []string,	jobID string,	rawCounts map[string]int64,func (p *LBcPostProcessor) AggregateAndRelease(// AggregateAndRelease performs final aggregation and privacy checks}	return key		}		key += fmt.Sprintf("%d", idx)		}			key += ","		if i > 0 {	for i, idx := range indices {	key := ""		}		remaining /= dimensions[i]		indices[i] = remaining % dimensions[i]	for i := len(dimensions) - 1; i >= 0; i-- {		remaining := idx	indices := make([]int, len(dimensions))func (p *LBcPostProcessor) indexToKey(idx int, dimensions []int) string {// indexToKey converts a flat index to a string key}	return -1 // Not found		}		}			return i		if packedVal == expected {		expected := int64(1) << (delta * i)	for i := 0; i < dimensions[0]; i++ {		spacing := int64(1) << delta	// This is a simplified decoder - actual implementation needs to match encoder	// In PBMV encoding, the value 2^(Δ*i) indicates category ifunc (p *LBcPostProcessor) decodeCellIndex(packedVal int64, delta int, dimensions []int) int {// decodeCellIndex extracts the cell index from a packed value}	return result, nil	}		}			}				result[key] += 1				key := p.indexToKey(cellIdx, dimensions)			if cellIdx >= 0 {			cellIdx := p.decodeCellIndex(int64(math.Round(val)), delta, dimensions)			// The encoding uses bit-field positions based on delta			// Decode the packed value back to cell indices			}				continue // Skip near-zero values			if math.Abs(val) < 0.5 {		for slotIdx, val := range chunk {	for _, chunk := range chunks {	// Aggregate across all chunks	}		totalCells *= d	for _, d := range dimensions {	totalCells := 1	// Total number of cells in contingency table	result := make(map[string]int64)	// Initialize result table) (map[string]int64, error) {	delta int,          // Δ parameter from LBc encoding	dimensions []int,   // Size of each categorical variable	chunks [][]float64, // Each chunk is decrypted slotsfunc (p *LBcPostProcessor) ProcessDecryptedChunks(// This is required when R > Slots * 2^Δ to prevent leakage// ProcessDecryptedChunks aggregates decrypted LBc chunks into a final table}	}		inspector: NewInspector(policy),		policy:    policy,	return &LBcPostProcessor{func NewLBcPostProcessor(policy *PolicyConfig) *LBcPostProcessor {// NewLBcPostProcessor creates a new LBc post-processor}	inspector *Inspector	policy    *PolicyConfigtype LBcPostProcessor struct {// LBcPostProcessor handles DDIA-side post-processing for Large-Bin-Count}	})		Reason:     reason,		Approved:   approved,		Conditions: conditions,		Columns:    columns,		Operation:  operation,		JobID:      jobID,		Timestamp:  time.Now(),	i.queries = append(i.queries, QueryAudit{func (i *Inspector) recordQuery(jobID, operation string, columns, conditions []string, approved bool, reason string) {}	return false	}		}			return true		if allowed == op {	for _, allowed := range i.policy.AllowedOperations {func (i *Inspector) isOperationAllowed(op string) bool {}	return encoder.Encode(i.queries)	encoder.SetIndent("", "  ")	encoder := json.NewEncoder(f)	defer f.Close()	}		return fmt.Errorf("failed to create audit log: %w", err)	if err != nil {	f, err := os.Create(path)func (i *Inspector) SaveAuditLog(path string) error {// SaveAuditLog saves the audit log to a JSON file}	return i.queriesfunc (i *Inspector) GetAuditLog() []QueryAudit {// GetAuditLog returns the query audit log}	return nil	}		return fmt.Errorf("query limit reached: %d queries in session", len(i.queries))	if len(i.queries) >= i.policy.MaxQueriesPerSession {func (i *Inspector) CheckQueryLimit() error {// CheckQueryLimit checks if the query limit has been reached}	return result, nil	i.recordQuery(jobID, "lbc", columns, nil, result.Approved, "")	result.TransformedVal = transformedCounts	}			fmt.Sprintf("high suppression ratio: %.1f%%", suppressionRatio*100))		result.Warnings = append(result.Warnings,	if suppressionRatio > 0.5 {	suppressionRatio := float64(len(suppressedCells)) / float64(len(counts))	// Check if too many cells are suppressed (might leak info)	}			fmt.Sprintf("%d cells suppressed due to k-anonymity", len(suppressedCells)))		result.Warnings = append(result.Warnings,		result.Suppressions = suppressedCells	if len(suppressedCells) > 0 {	}		}			transformedCounts[key] = count		} else {			suppressedCells = append(suppressedCells, key)		if count < int64(i.policy.KAnonymityThreshold) {	for key, count := range counts {	suppressedCells := make([]string, 0)	transformedCounts := make(map[string]int64)	}		Approved: true,	result := &InspectionResult{) (*InspectionResult, error) {	columns []string,	jobID string,	counts map[string]int64, // cell key -> countfunc (i *Inspector) InspectContingencyTable(// InspectContingencyTable checks a contingency table for privacy violations}	return result, nil	i.recordQuery(jobID, "bc", columns, conditions, true, "")	result.TransformedVal = count	}			fmt.Sprintf("small group detected: count %d near threshold", count))		result.Warnings = append(result.Warnings, 	if count < int64(i.policy.SmallGroupThreshold) {	// Check small group threshold (warning only)	}		return result, nil		i.recordQuery(jobID, "bc", columns, conditions, false, result.Reason)		result.Suppressions = append(result.Suppressions, "count suppressed due to k-anonymity")		result.Reason = fmt.Sprintf("bin count %d below k-anonymity threshold %d", count, i.policy.KAnonymityThreshold)		result.Approved = false	if count < int64(i.policy.KAnonymityThreshold) {	// Check k-anonymity threshold	}		Approved: true,	result := &InspectionResult{) (*InspectionResult, error) {	conditions []string,	columns []string,	jobID string,	count int64,func (i *Inspector) InspectBinCount(// InspectBinCount checks a bin count result for k-anonymity}	return result, nil	i.recordQuery(jobID, operation, columns, nil, true, "")	result.TransformedVal = transformedValue	}		transformedValue = math.Round(transformedValue/i.policy.RoundingMultiple) * i.policy.RoundingMultiple	if i.policy.RoundingMultiple > 0 {	// Apply rounding multiple	}		transformedValue = math.Round(value*factor) / factor		factor := math.Pow(10, float64(i.policy.MaxPrecision))	if i.policy.MaxPrecision > 0 {	transformedValue := value	// Apply precision limits	}		return result, nil		i.recordQuery(jobID, operation, columns, nil, false, result.Reason)		result.Reason = fmt.Sprintf("operation %s not allowed by policy", operation)		result.Approved = false	if !i.isOperationAllowed(operation) {	// Check if operation is allowed	}		Approved: true,	result := &InspectionResult{) (*InspectionResult, error) {	columns []string,	operation string,	jobID string,	value float64,func (i *Inspector) InspectNumericResult(// InspectNumericResult checks and transforms a numeric result}	Warnings       []string          `json:"warnings,omitempty"`	Suppressions   []string          `json:"suppressions,omitempty"`	TransformedVal interface{}       `json:"transformed_value,omitempty"`	Reason         string            `json:"reason,omitempty"`	Approved       bool              `json:"approved"`type InspectionResult struct {// InspectionResult holds the result of a privacy inspection}	}		queries: make([]QueryAudit, 0),		policy:  policy,	return &Inspector{	}		policy = &defaultPolicy		defaultPolicy := DefaultPolicyConfig()	if policy == nil {func NewInspector(policy *PolicyConfig) *Inspector {// NewInspector creates a new privacy inspector}	Reason      string    `json:"reason,omitempty"`	Approved    bool      `json:"approved"`	Conditions  []string  `json:"conditions,omitempty"`	Columns     []string  `json:"columns"`	Operation   string    `json:"operation"`	JobID       string    `json:"job_id"`	Timestamp   time.Time `json:"timestamp"`type QueryAudit struct {// QueryAudit records information about a query for auditing}	queries []QueryAudit	policy  *PolicyConfigtype Inspector struct {// Inspector performs privacy inspection on decrypted results}	return encoder.Encode(p)	encoder.SetIndent("", "  ")	encoder := json.NewEncoder(f)	defer f.Close()	}		return fmt.Errorf("failed to create policy file: %w", err)	if err != nil {	f, err := os.Create(path)func (p *PolicyConfig) SaveToFile(path string) error {// SaveToFile saves the policy to a JSON file}	return &cfg, nil	}		return nil, fmt.Errorf("failed to parse policy: %w", err)	if err := json.NewDecoder(r).Decode(&cfg); err != nil {	var cfg PolicyConfigfunc ParsePolicyConfig(r io.Reader) (*PolicyConfig, error) {// ParsePolicyConfig parses a policy from JSON}	return ParsePolicyConfig(f)	defer f.Close()	}		return nil, fmt.Errorf("failed to open policy file: %w", err)	if err != nil {	f, err := os.Open(path)func LoadPolicyConfig(path string) (*PolicyConfig, error) {// LoadPolicyConfig loads a policy from a JSON file}	}		},			"bc", "ba", "bv", "lbc", "percentile",			"mean", "var", "stdev", "corr",		AllowedOperations: []string{		MaxQueriesPerSession: 100,		RoundingMultiple:     0.0,		MaxPrecision:         6,		SmallGroupThreshold:  3,		KAnonymityThreshold:  5,	return PolicyConfig{func DefaultPolicyConfig() PolicyConfig {// DefaultPolicyConfig returns a default privacy policy}	AllowedOperations []string `json:"allowed_operations"`	// Allowed operations	MaxQueriesPerSession int `json:"max_queries_per_session"`	// Maximum number of queries per session	RoundingMultiple float64 `json:"rounding_multiple"`	// Rounding rules: round to nearest multiple of this value	MaxPrecision int `json:"max_precision"`	// Maximum decimal precision for numeric outputs	SmallGroupThreshold int `json:"small_group_threshold"`	// Small group suppression: suppress bins with count below this	KAnonymityThreshold int `json:"k_anonymity_threshold"`	// K-anonymity threshold: minimum count for bin to be releasedtype PolicyConfig struct {// PolicyConfig defines privacy policy parameters)	"time"	"os"	"math"	"io"	"fmt"
+	"fmt"
+	"io"
+	"math"
+	"os"
+)
+
+// Policy defines privacy rules for result release
+type Policy struct {
+	// ID is the policy identifier
+	ID string `json:"id"`
+
+	// Name is a human-readable name
+	Name string `json:"name"`
+
+	// MinCount is the minimum count for any bin (k-anonymity)
+	MinCount int `json:"min_count"`
+
+	// MaxPrecision is the maximum decimal places for numeric results
+	MaxPrecision int `json:"max_precision"`
+
+	// SuppressSmallGroups suppresses results with count < MinCount
+	SuppressSmallGroups bool `json:"suppress_small_groups"`
+
+	// RoundingEnabled enables rounding of numeric results
+	RoundingEnabled bool `json:"rounding_enabled"`
+
+	// AuditEnabled enables query auditing
+	AuditEnabled bool `json:"audit_enabled"`
+}
+
+// DefaultPolicy returns a sensible default privacy policy
+func DefaultPolicy() *Policy {
+	return &Policy{
+		ID:                  "default",
+		Name:                "Default Privacy Policy",
+		MinCount:            5,
+		MaxPrecision:        4,
+		SuppressSmallGroups: true,
+		RoundingEnabled:     true,
+		AuditEnabled:        true,
+	}
+}
+
+// LoadPolicy loads a policy from a JSON file
+func LoadPolicy(path string) (*Policy, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open policy file: %w", err)
+	}
+	defer f.Close()
+	return ParsePolicy(f)
+}
+
+// ParsePolicy parses a policy from JSON
+func ParsePolicy(r io.Reader) (*Policy, error) {
+	var policy Policy
+	decoder := json.NewDecoder(r)
+	if err := decoder.Decode(&policy); err != nil {
+		return nil, fmt.Errorf("failed to parse policy: %w", err)
+	}
+	return &policy, nil
+}
+
+// Inspector performs privacy inspection on results
+type Inspector struct {
+	policy *Policy
+}
+
+// NewInspector creates a new privacy inspector
+func NewInspector(policy *Policy) *Inspector {
+	if policy == nil {
+		policy = DefaultPolicy()
+	}
+	return &Inspector{policy: policy}
+}
+
+// InspectionResult contains the result of privacy inspection
+type InspectionResult struct {
+	// Approved indicates if the result can be released
+	Approved bool `json:"approved"`
+
+	// Violations lists any policy violations found
+	Violations []Violation `json:"violations,omitempty"`
+
+	// TransformedValue is the policy-compliant value (if approved)
+	TransformedValue interface{} `json:"transformed_value,omitempty"`
+
+	// AuditRecord contains audit information
+	AuditRecord *AuditRecord `json:"audit_record,omitempty"`
+}
+
+// Violation represents a policy violation
+type Violation struct {
+	Rule    string `json:"rule"`
+	Message string `json:"message"`
+}
+
+// AuditRecord contains audit information for a query
+type AuditRecord struct {
+	JobID      string                 `json:"job_id"`
+	Operation  string                 `json:"operation"`
+	Timestamp  string                 `json:"timestamp"`
+	InputCols  []string               `json:"input_columns"`
+	Conditions map[string]interface{} `json:"conditions,omitempty"`
+	ResultType string                 `json:"result_type"`
+	Approved   bool                   `json:"approved"`
+}
+
+// InspectNumeric inspects a numeric result (mean, variance, etc.)
+func (i *Inspector) InspectNumeric(value float64, count int, jobID string, operation string) *InspectionResult {
+	result := &InspectionResult{
+		Approved: true,
+	}
+
+	// Check minimum count
+	if i.policy.SuppressSmallGroups && count < i.policy.MinCount {
+		result.Approved = false
+		result.Violations = append(result.Violations, Violation{
+			Rule:    "min_count",
+			Message: fmt.Sprintf("count %d is below minimum %d", count, i.policy.MinCount),
+		})
+	}
+
+	// Apply rounding if approved
+	if result.Approved && i.policy.RoundingEnabled {
+		multiplier := math.Pow(10, float64(i.policy.MaxPrecision))
+		value = math.Round(value*multiplier) / multiplier
+	}
+
+	if result.Approved {
+		result.TransformedValue = value
+	}
+
+	// Create audit record
+	if i.policy.AuditEnabled {
+		result.AuditRecord = &AuditRecord{
+			JobID:      jobID,
+			Operation:  operation,
+			ResultType: "numeric",
+			Approved:   result.Approved,
+		}
+	}
+
+	return result
+}
+
+// InspectCount inspects a count result (Bc)
+func (i *Inspector) InspectCount(count int, jobID string, conditions map[string]int) *InspectionResult {
+	result := &InspectionResult{
+		Approved: true,
+	}
+
+	// Check minimum count
+	if i.policy.SuppressSmallGroups && count < i.policy.MinCount {
+		result.Approved = false
+		result.Violations = append(result.Violations, Violation{
+			Rule:    "min_count",
+			Message: fmt.Sprintf("count %d is below minimum %d", count, i.policy.MinCount),
+		})
+	}
+
+	if result.Approved {
+		result.TransformedValue = count
+	}
+
+	// Create audit record
+	if i.policy.AuditEnabled {
+		condMap := make(map[string]interface{})
+		for k, v := range conditions {
+			condMap[k] = v
+		}
+		result.AuditRecord = &AuditRecord{
+			JobID:      jobID,
+			Operation:  "bc",
+			Conditions: condMap,
+			ResultType: "count",
+			Approved:   result.Approved,
+		}
+	}
+
+	return result
+}
+
+// ContingencyTable represents a multi-way contingency table
+type ContingencyTable struct {
+	Dimensions []string         `json:"dimensions"`
+	Categories map[string][]int `json:"categories"`
+	Counts     map[string]int   `json:"counts"` // key is comma-separated category values
+}
+
+// InspectContingencyTable inspects a contingency table (LBc result)
+func (i *Inspector) InspectContingencyTable(table *ContingencyTable, jobID string) *InspectionResult {
+	result := &InspectionResult{
+		Approved: true,
+	}
+
+	// Check each cell for minimum count
+	suppressedCells := make(map[string]bool)
+	for key, count := range table.Counts {
+		if count < i.policy.MinCount {
+			if i.policy.SuppressSmallGroups {
+				suppressedCells[key] = true
+			} else {
+				result.Violations = append(result.Violations, Violation{
+					Rule:    "min_count",
+					Message: fmt.Sprintf("cell %s has count %d below minimum %d", key, count, i.policy.MinCount),
+				})
+			}
+		}
+	}
+
+	// Create transformed table with suppressions
+	if result.Approved || len(result.Violations) == 0 {
+		transformedCounts := make(map[string]int)
+		for key, count := range table.Counts {
+			if !suppressedCells[key] {
+				transformedCounts[key] = count
+			} else {
+				transformedCounts[key] = -1 // indicates suppressed
+			}
+		}
+		result.TransformedValue = &ContingencyTable{
+			Dimensions: table.Dimensions,
+			Categories: table.Categories,
+			Counts:     transformedCounts,
+		}
+	}
+
+	// Create audit record
+	if i.policy.AuditEnabled {
+		result.AuditRecord = &AuditRecord{
+			JobID:      jobID,
+			Operation:  "lbc",
+			ResultType: "contingency_table",
+			Approved:   result.Approved,
+		}
+	}
+
+	return result
+}
+
+// InspectPercentile inspects a percentile result
+func (i *Inspector) InspectPercentile(bucket int, count int, k float64, jobID string) *InspectionResult {
+	result := &InspectionResult{
+		Approved: true,
+	}
+
+	// Check minimum count
+	if i.policy.SuppressSmallGroups && count < i.policy.MinCount {
+		result.Approved = false
+		result.Violations = append(result.Violations, Violation{
+			Rule:    "min_count",
+			Message: fmt.Sprintf("count %d is below minimum %d", count, i.policy.MinCount),
+		})
+	}
+
+	if result.Approved {
+		result.TransformedValue = bucket
+	}
+
+	// Create audit record
+	if i.policy.AuditEnabled {
+		result.AuditRecord = &AuditRecord{
+			JobID:      jobID,
+			Operation:  "percentile",
+			Conditions: map[string]interface{}{"k": k},
+			ResultType: "bucket_index",
+			Approved:   result.Approved,
+		}
+	}
+
+	return result
+}
+
+// LBcPostProcessor handles post-processing for LBc results
+type LBcPostProcessor struct {
+	policy *Policy
+}
+
+// NewLBcPostProcessor creates a new LBc post-processor
+func NewLBcPostProcessor(policy *Policy) *LBcPostProcessor {
+	if policy == nil {
+		policy = DefaultPolicy()
+	}
+	return &LBcPostProcessor{policy: policy}
+}
+
+// PostProcessResult represents the output of LBc post-processing
+type PostProcessResult struct {
+	Table        *ContingencyTable `json:"table"`
+	Suppressions int               `json:"suppressions"`
+	Inspection   *InspectionResult `json:"inspection"`
+}
+
+// ProcessDecryptedChunks aggregates decrypted LBc chunks into a contingency table
+// This is used when R > Slots * 2^Δ to ensure raw chunks are never exposed
+func (p *LBcPostProcessor) ProcessDecryptedChunks(
+	chunks [][]float64,
+	dimensions []string,
+	categoryCounts []int,
+	jobID string,
+) (*PostProcessResult, error) {
+	// Aggregate chunks
+	totalCells := 1
+	for _, c := range categoryCounts {
+		totalCells *= c
+	}
+
+	aggregated := make([]float64, totalCells)
+	for _, chunk := range chunks {
+		for i, v := range chunk {
+			if i < totalCells {
+				aggregated[i] += v
+			}
+		}
+	}
+
+	// Build contingency table
+	table := &ContingencyTable{
+		Dimensions: dimensions,
+		Categories: make(map[string][]int),
+		Counts:     make(map[string]int),
+	}
+
+	for i, dim := range dimensions {
+		cats := make([]int, categoryCounts[i])
+		for j := 0; j < categoryCounts[i]; j++ {
+			cats[j] = j + 1
+		}
+		table.Categories[dim] = cats
+	}
+
+	// Populate counts
+	for i, v := range aggregated {
+		key := indexToKey(i, categoryCounts)
+		table.Counts[key] = int(math.Round(v))
+	}
+
+	// Inspect
+	inspector := NewInspector(p.policy)
+	inspection := inspector.InspectContingencyTable(table, jobID)
+
+	// Count suppressions
+	suppressions := 0
+	if inspection.TransformedValue != nil {
+		transformedTable := inspection.TransformedValue.(*ContingencyTable)
+		for _, v := range transformedTable.Counts {
+			if v == -1 {
+				suppressions++
+			}
+		}
+	}
+
+	return &PostProcessResult{
+		Table:        table,
+		Suppressions: suppressions,
+		Inspection:   inspection,
+	}, nil
+}
+
+// indexToKey converts a flat index to a comma-separated category key
+func indexToKey(index int, categoryCounts []int) string {
+	if len(categoryCounts) == 0 {
+		return ""
+	}
+
+	values := make([]int, len(categoryCounts))
+	remaining := index
+	for i := len(categoryCounts) - 1; i >= 0; i-- {
+		values[i] = (remaining % categoryCounts[i]) + 1
+		remaining /= categoryCounts[i]
+	}
+
+	key := ""
+	for i, v := range values {
+		if i > 0 {
+			key += ","
+		}
+		key += fmt.Sprintf("%d", v)
+	}
+	return key
+}
+
+// AuditLog stores audit records
+type AuditLog struct {
+	Records []*AuditRecord `json:"records"`
+}
+
+// NewAuditLog creates a new audit log
+func NewAuditLog() *AuditLog {
+	return &AuditLog{Records: make([]*AuditRecord, 0)}
+}
+
+// Add adds a record to the audit log
+func (l *AuditLog) Add(record *AuditRecord) {
+	if record != nil {
+		l.Records = append(l.Records, record)
+	}
+}
+
+// Save saves the audit log to a file
+func (l *AuditLog) Save(path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed to create audit log file: %w", err)
+	}
+	defer f.Close()
+
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(l)
+}
+
+// Load loads an audit log from a file
+func LoadAuditLog(path string) (*AuditLog, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open audit log file: %w", err)
+	}
+	defer f.Close()
+
+	var log AuditLog
+	decoder := json.NewDecoder(f)
+	if err := decoder.Decode(&log); err != nil {
+		return nil, fmt.Errorf("failed to parse audit log: %w", err)
+	}
+	return &log, nil
+}

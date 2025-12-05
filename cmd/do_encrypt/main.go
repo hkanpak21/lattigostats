@@ -1,266 +1,269 @@
-package doencrypt
-// Command do_encrypt provides data encryption for data owners.
+// DO Encrypt - Data Owner Encryption Tool
+// This tool encrypts tabular data into the Lattigo-STAT format.
 package main
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	fmt.Printf("Slots per block: %d\n", profile.Slots)	fmt.Printf("Blocks per column: %d\n", metadata.BlockCount)	fmt.Printf("Output directory: %s\n", *outputDir)	fmt.Printf("\nEncryption complete!\n")	}		}			}				}					}						log.Fatalf("Failed to write BMV: %v", err)					if err := ts.WriteBMV(col.Name, cat, blockIdx, bmvCt); err != nil {					}						log.Fatalf("Failed to encrypt BMV: %v", err)					if err != nil {					bmvCt, err := encryptor.Encrypt(bmvPt)					}						log.Fatalf("Failed to encode BMV: %v", err)					if err != nil {					bmvPt, err := encoder.EncodeFloat64(bmvValues, profile.MaxLevel())					}						}							bmvValues[slotIdx] = 1						if err == nil && intVal == cat {						intVal, err := strconv.Atoi(cellValue)												cellValue := allRows[i][idx]						slotIdx := i - startRow					for i := startRow; i < endRow; i++ {					bmvValues := make([]float64, profile.Slots)					}						endRow = rowCount					if endRow > rowCount {					endRow := startRow + profile.Slots					startRow := blockIdx * profile.Slots				for blockIdx := 0; blockIdx < metadata.BlockCount; blockIdx++ {			for cat := 1; cat <= col.CategoryCount; cat++ {						fmt.Printf("  Generating BMVs for %d categories\n", col.CategoryCount)		if col.Type == schema.Categorical || col.Type == schema.Ordinal {		// Generate BMVs for categorical columns		}			}				log.Fatalf("Failed to write validity block %d: %v", blockIdx, err)			if err := ts.WriteValidity(col.Name, blockIdx, validityCt); err != nil {			}				log.Fatalf("Failed to write block %d: %v", blockIdx, err)			if err := ts.WriteBlock(col.Name, blockIdx, dataCt); err != nil {			// Save			}				log.Fatalf("Failed to encrypt validity block %d: %v", blockIdx, err)			if err != nil {			validityCt, err := encryptor.Encrypt(validityPt)			}				log.Fatalf("Failed to encode validity block %d: %v", blockIdx, err)			if err != nil {			validityPt, err := encoder.EncodeFloat64(validity, level)			// Encode and encrypt validity			}				log.Fatalf("Failed to encrypt block %d: %v", blockIdx, err)			if err != nil {			dataCt, err := encryptor.Encrypt(dataPt)			}				log.Fatalf("Failed to encode block %d: %v", blockIdx, err)			if err != nil {			dataPt, err := encoder.EncodeFloat64(values, level)			level := profile.MaxLevel()			// Encode and encrypt data			}				}					validity[slotIdx] = 1					values[slotIdx] = val					}						val = float64(intVal)						}							continue							validity[slotIdx] = 0							values[slotIdx] = 0							log.Printf("Warning: failed to parse value '%s' in row %d, treating as invalid", cellValue, i)						if err2 != nil {						intVal, err2 := strconv.Atoi(cellValue)						// For categorical, try parsing as int					if err != nil {					val, err := strconv.ParseFloat(cellValue, 64)				} else {					validity[slotIdx] = 0					values[slotIdx] = 0				if cellValue == "" || cellValue == "NA" || cellValue == "null" {				cellValue := allRows[i][idx]				slotIdx := i - startRow			for i := startRow; i < endRow; i++ {			validity := make([]float64, profile.Slots)			values := make([]float64, profile.Slots)			// Extract values and validity for this block			}				endRow = rowCount			if endRow > rowCount {			endRow := startRow + profile.Slots			startRow := blockIdx * profile.Slots		for blockIdx := 0; blockIdx < metadata.BlockCount; blockIdx++ {		// Process in blocks		idx := colIndex[col.Name]		fmt.Printf("Encrypting column: %s (%s)\n", col.Name, col.Type)	for _, col := range tableSchema.Columns {	// Encrypt each column	}		log.Fatalf("Failed to create storage: %v", err)	if err != nil {	ts, err := storage.NewTableStorage(*outputDir, metadata, profile.Params)	// Create storage	}		log.Fatalf("Failed to create metadata: %v", err)	if err != nil {	metadata, err := schema.NewTableMetadata(tableSchema, rowCount, profile.Slots, profile.ParamsHash, profile.LogScale, *dataOwnerID)	// Create metadata	fmt.Printf("Read %d rows from CSV\n", rowCount)	rowCount := len(allRows)	}		allRows = append(allRows, row)		}			log.Fatalf("Failed to read CSV row: %v", err)		if err != nil {		}			break		if err == io.EOF {		row, err := reader.Read()	for {	var allRows [][]string	// Read all data	}		}			log.Fatalf("Column %s from schema not found in CSV", col.Name)		if _, ok := colIndex[col.Name]; !ok {	for _, col := range tableSchema.Columns {	// Verify all schema columns exist in CSV	}		colIndex[name] = i	for i, name := range header {	colIndex := make(map[string]int)	// Build column index map	}		log.Fatalf("Failed to read CSV header: %v", err)	if err != nil {	header, err := reader.Read()	// Read header	reader := csv.NewReader(csvFile)	defer csvFile.Close()	}		log.Fatalf("Failed to open CSV: %v", err)	if err != nil {	csvFile, err := os.Open(*inputFile)	// Read CSV data	encryptor := he.NewEncryptor(profile.Params, pk)	encoder := he.NewEncoder(profile.Params)	// Create encoder and encryptor	}		log.Fatalf("Failed to unmarshal public key: %v", err)	if err := pk.UnmarshalBinary(pkData); err != nil {	pk := new(rlwe.PublicKey)	}		log.Fatalf("Failed to read public key: %v", err)	if err != nil {	pkData, err := os.ReadFile(pkPath)	pkPath := fmt.Sprintf("%s/public.key", *keyDir)	// Load public key	}		log.Fatalf("Failed to create profile: %v", err)	if err != nil {	}		log.Fatalf("Unknown profile: %s", paramsMeta.Profile)	default:		profile, err = params.NewProfileB()	case "B":		profile, err = params.NewProfileA()	case "A":	switch paramsMeta.Profile {	var profile *params.Profile	// Create profile	}		log.Fatalf("Failed to parse params: %v", err)	if err := json.Unmarshal(paramsData, &paramsMeta); err != nil {	}		Profile string `json:"profile"`	var paramsMeta struct {	}		log.Fatalf("Failed to read params: %v", err)	if err != nil {	paramsData, err := os.ReadFile(paramsPath)	paramsPath := fmt.Sprintf("%s/params.json", *keyDir)	// Load params metadata	fmt.Printf("Loaded schema: %s with %d columns\n", tableSchema.Name, len(tableSchema.Columns))	}		log.Fatalf("Invalid schema: %v", err)	if err := tableSchema.Validate(); err != nil {	}		log.Fatalf("Failed to parse schema: %v", err)	if err := json.Unmarshal(schemaData, &tableSchema); err != nil {	var tableSchema schema.TableSchema	}		log.Fatalf("Failed to read schema: %v", err)	if err != nil {	schemaData, err := os.ReadFile(*schemaFile)	// Load schema	}		os.Exit(1)		fs.PrintDefaults()		fmt.Fprintln(os.Stderr, "Error: -input and -schema are required")	if *inputFile == "" || *schemaFile == "" {	fs.Parse(os.Args[1:])	dataOwnerID := fs.String("owner", "unknown", "Data owner identifier")	outputDir := fs.String("output", "./encrypted", "Output directory for encrypted table")	keyDir := fs.String("keys", "./keys", "Directory containing public key and params")	schemaFile := fs.String("schema", "", "Schema definition file (JSON)")	inputFile := fs.String("input", "", "Input CSV file")	fs := flag.NewFlagSet("do_encrypt", flag.ExitOnError)func main() {)	"github.com/hkanpak21/lattigostats/pkg/storage"	"github.com/hkanpak21/lattigostats/pkg/schema"	"github.com/hkanpak21/lattigostats/pkg/params"	"github.com/hkanpak21/lattigostats/pkg/he"	"github.com/tuneinsight/lattigo/v6/core/rlwe"	"strconv"	"os"	"log"	"io"	"fmt"	"flag"	"encoding/json"	"encoding/csv"import (
+import (
+	"encoding/csv"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/hkanpak21/lattigostats/pkg/params"
+	"github.com/hkanpak21/lattigostats/pkg/schema"
+	"github.com/hkanpak21/lattigostats/pkg/storage"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+	"github.com/tuneinsight/lattigo/v6/schemes/ckks"
+)
+
+func main() {
+	dataPath := flag.String("data", "", "Path to CSV data file")
+	schemaPath := flag.String("schema", "", "Path to schema JSON file")
+	pkPath := flag.String("pk", "", "Path to public key")
+	outputDir := flag.String("output", "./encrypted", "Output directory")
+	profile := flag.String("profile", "A", "Parameter profile (A or B)")
+	ownerID := flag.String("owner", "owner1", "Data owner ID")
+	flag.Parse()
+
+	if *dataPath == "" || *schemaPath == "" || *pkPath == "" {
+		fmt.Fprintln(os.Stderr, "Usage: do_encrypt -data <csv> -schema <json> -pk <public_key>")
+		os.Exit(1)
+	}
+
+	// Load parameters
+	var prof *params.Profile
+	var err error
+	switch *profile {
+	case "A":
+		prof, err = params.NewProfileA()
+	case "B":
+		prof, err = params.NewProfileB()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown profile: %s\n", *profile)
+		os.Exit(1)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create parameters: %v\n", err)
+		os.Exit(1)
+	}
+	p := prof.Params
+
+	// Load schema
+	schemaFile, err := os.Open(*schemaPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open schema: %v\n", err)
+		os.Exit(1)
+	}
+	var tableSchema schema.TableSchema
+	json.NewDecoder(schemaFile).Decode(&tableSchema)
+	schemaFile.Close()
+
+	if err := tableSchema.Validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid schema: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Load public key
+	pkData, err := os.ReadFile(*pkPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read public key: %v\n", err)
+		os.Exit(1)
+	}
+	pk := new(rlwe.PublicKey)
+	if err := pk.UnmarshalBinary(pkData); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse public key: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Load CSV data
+	dataFile, err := os.Open(*dataPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open data: %v\n", err)
+		os.Exit(1)
+	}
+	reader := csv.NewReader(dataFile)
+	records, err := reader.ReadAll()
+	dataFile.Close()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read CSV: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(records) < 2 {
+		fmt.Fprintln(os.Stderr, "CSV must have header and at least one row")
+		os.Exit(1)
+	}
+
+	header := records[0]
+	data := records[1:]
+	rowCount := len(data)
+
+	// Map column names to indices
+	colIndex := make(map[string]int)
+	for i, name := range header {
+		colIndex[name] = i
+	}
+
+	// Validate schema columns exist
+	for _, col := range tableSchema.Columns {
+		if _, ok := colIndex[col.Name]; !ok {
+			fmt.Fprintf(os.Stderr, "Column %s not found in data\n", col.Name)
+			os.Exit(1)
+		}
+	}
+
+	// Create output directory
+	store, err := storage.NewTableStore(*outputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create table store: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Setup encryption
+	encryptor := rlwe.NewEncryptor(p, pk)
+	encoder := ckks.NewEncoder(p)
+	slots := p.MaxSlots()
+	scale := rlwe.NewScale(p.DefaultScale())
+	level := p.MaxLevel()
+
+	// Calculate blocks
+	blockCount := (rowCount + slots - 1) / slots
+
+	fmt.Printf("Encrypting %d rows in %d blocks (slots=%d)\n", rowCount, blockCount, slots)
+
+	// Encrypt each column
+	for _, col := range tableSchema.Columns {
+		fmt.Printf("  Encrypting column: %s (%s)\n", col.Name, col.Type)
+		idx := colIndex[col.Name]
+
+		for b := 0; b < blockCount; b++ {
+			startRow := b * slots
+			endRow := startRow + slots
+			if endRow > rowCount {
+				endRow = rowCount
+			}
+
+			// Extract values for this block
+			values := make([]complex128, slots)
+			validity := make([]complex128, slots)
+
+			for i := startRow; i < endRow; i++ {
+				slotIdx := i - startRow
+				cellValue := data[i][idx]
+
+				if cellValue == "" || cellValue == "NA" || cellValue == "null" {
+					validity[slotIdx] = 0
+					values[slotIdx] = 0
+				} else {
+					validity[slotIdx] = 1
+					v, err := strconv.ParseFloat(cellValue, 64)
+					if err != nil {
+						// For categorical, try int
+						iv, err2 := strconv.Atoi(cellValue)
+						if err2 != nil {
+							fmt.Fprintf(os.Stderr, "Invalid value at row %d, col %s: %s\n", i, col.Name, cellValue)
+							os.Exit(1)
+						}
+						v = float64(iv)
+					}
+					values[slotIdx] = complex(v, 0)
+				}
+			}
+
+			// Encrypt values
+			pt := ckks.NewPlaintext(p, level)
+			pt.Scale = scale
+			encoder.Encode(values, pt)
+			ct, err := encryptor.EncryptNew(pt)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Encryption failed: %v\n", err)
+				os.Exit(1)
+			}
+
+			if err := store.SaveBlock(col.Name, b, ct); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save block: %v\n", err)
+				os.Exit(1)
+			}
+
+			// Encrypt validity
+			ptVal := ckks.NewPlaintext(p, level)
+			ptVal.Scale = scale
+			encoder.Encode(validity, ptVal)
+			ctVal, err := encryptor.EncryptNew(ptVal)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Validity encryption failed: %v\n", err)
+				os.Exit(1)
+			}
+
+			if err := store.SaveValidity(col.Name, b, ctVal); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save validity: %v\n", err)
+				os.Exit(1)
+			}
+		}
+
+		// Generate BMVs for categorical/ordinal columns
+		if col.Type == schema.Categorical || col.Type == schema.Ordinal {
+			fmt.Printf("    Generating BMVs for %d categories\n", col.CategoryCount)
+			idx := colIndex[col.Name]
+
+			for catVal := 1; catVal <= col.CategoryCount; catVal++ {
+				for b := 0; b < blockCount; b++ {
+					startRow := b * slots
+					endRow := startRow + slots
+					if endRow > rowCount {
+						endRow = rowCount
+					}
+
+					bmv := make([]complex128, slots)
+					for i := startRow; i < endRow; i++ {
+						slotIdx := i - startRow
+						cellValue := data[i][idx]
+						if cellValue != "" && cellValue != "NA" && cellValue != "null" {
+							iv, _ := strconv.Atoi(cellValue)
+							if iv == catVal {
+								bmv[slotIdx] = 1
+							}
+						}
+					}
+
+					pt := ckks.NewPlaintext(p, level)
+					pt.Scale = scale
+					encoder.Encode(bmv, pt)
+					ct, err := encryptor.EncryptNew(pt)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "BMV encryption failed: %v\n", err)
+						os.Exit(1)
+					}
+
+					if err := store.SaveBMV(col.Name, catVal, b, ct); err != nil {
+						fmt.Fprintf(os.Stderr, "Failed to save BMV: %v\n", err)
+						os.Exit(1)
+					}
+				}
+			}
+		}
+	}
+
+	// Save metadata
+	meta, err := schema.NewTableMetadata(
+		tableSchema,
+		rowCount,
+		slots,
+		*profile,
+		int(p.LogDefaultScale()),
+		*ownerID,
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create metadata: %v\n", err)
+		os.Exit(1)
+	}
+
+	metaPath := store.BasePath + "/metadata.json"
+	if err := meta.SaveToFile(metaPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save metadata: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\nEncryption complete! Output: %s\n", *outputDir)
+}

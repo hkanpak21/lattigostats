@@ -1,219 +1,301 @@
-package ddia
-// Command ddia provides key generation, decryption, and privacy inspection for DDIA.
+// DDIA - Data Decryption and Inspection Authority
+// This tool handles key generation, decryption, and privacy inspection.
 package main
 
 import (
 	"encoding/json"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	fmt.Printf("\nExample inspection result: approved=%v, value=%v\n", result.Approved, result.TransformedVal)	result, _ := inspector.InspectNumericResult(0.12345678, "test-job", "mean", []string{"income"})	// Example inspection	}		fmt.Printf("Results would be written to: %s\n", *outputFile)	if *outputFile != "" {	fmt.Printf("\nWould inspect results from: %s\n", *inputFile)	}		return		fmt.Println("\nNo input file specified. Inspector is ready for manual use.")	if *inputFile == "" {	fmt.Printf("  Allowed operations: %v\n", policy.AllowedOperations)	fmt.Printf("  Max precision: %d\n", policy.MaxPrecision)	fmt.Printf("  Small group threshold: %d\n", policy.SmallGroupThreshold)	fmt.Printf("  K-anonymity threshold: %d\n", policy.KAnonymityThreshold)	fmt.Printf("Privacy inspector initialized with policy:\n")	inspector := privacy.NewInspector(policy)	}		policy = &defaultPolicy		defaultPolicy := privacy.DefaultPolicyConfig()	} else {		}			log.Fatalf("Failed to load policy: %v", err)		if err != nil {		policy, err = privacy.LoadPolicyConfig(*policyFile)		var err error	if *policyFile != "" {	var policy *privacy.PolicyConfig	// Load or create default policy	fs.Parse(os.Args[2:])	outputFile := fs.String("output", "", "Inspection result output file")	inputFile := fs.String("input", "", "Decrypted result file")	policyFile := fs.String("policy", "", "Privacy policy file (JSON)")	fs := flag.NewFlagSet("inspect", flag.ExitOnError)func inspectCmd() {}	}		fmt.Printf("Output would be written to: %s\n", *outputFile)	if *outputFile != "" {	fmt.Printf("Would decrypt: %s using keys from %s\n", *inputFile, *keyDir)	fmt.Println("Decrypt command - implementation requires loading ciphertext format")	}		os.Exit(1)		fs.PrintDefaults()		fmt.Fprintln(os.Stderr, "Error: -input is required")	if *inputFile == "" {	fs.Parse(os.Args[2:])	outputFile := fs.String("output", "", "Output plaintext file (optional)")	inputFile := fs.String("input", "", "Input ciphertext file")	keyDir := fs.String("keys", "./keys", "Directory containing keys")	fs := flag.NewFlagSet("decrypt", flag.ExitOnError)func decryptCmd() {}	fmt.Println("Keep secret.key secure - only DDIA should have access")	fmt.Println("Distribute public.key, eval.key, and params.json to DA/DO/DMA")	fmt.Println("\nKey generation complete!")	fmt.Printf("Parameters saved to: %s\n", metaPath)	}		log.Fatalf("Failed to write params metadata: %v", err)	if err := os.WriteFile(metaPath, metaData, 0644); err != nil {	}		log.Fatalf("Failed to marshal params metadata: %v", err)	if err != nil {	metaData, err := json.MarshalIndent(meta, "", "  ")	}		RotSteps:   rotSteps,		ParamsHash: p.ParamsHash,		MaxLevel:   p.MaxLevel(),		LogScale:   p.LogScale,		Slots:      p.Slots,		LogN:       p.LogN,		Profile:    string(p.Type),	}{		RotSteps   []int    `json:"rotation_steps"`		ParamsHash string   `json:"params_hash"`		MaxLevel   int      `json:"max_level"`		LogScale   int      `json:"log_scale"`		Slots      int      `json:"slots"`		LogN       int      `json:"log_n"`		Profile    string   `json:"profile"`	meta := struct {	metaPath := filepath.Join(*outputDir, "params.json")	// Save params metadata	fmt.Printf("Evaluation keys saved to: %s\n", evalPath)	}		log.Fatalf("Failed to write evaluation keys: %v", err)	if err := os.WriteFile(evalPath, evalData, 0644); err != nil {	}		log.Fatalf("Failed to marshal evaluation keys: %v", err)	if err != nil {	evalData, err := evalKeySet.MarshalBinary()	evalPath := filepath.Join(*outputDir, "eval.key")	// Save evaluation keys	fmt.Printf("Public key saved to: %s\n", pkPath)	}		log.Fatalf("Failed to write public key: %v", err)	if err := os.WriteFile(pkPath, pkData, 0644); err != nil {	}		log.Fatalf("Failed to marshal public key: %v", err)	if err != nil {	pkData, err := kg.PublicKey().MarshalBinary()	pkPath := filepath.Join(*outputDir, "public.key")	// Save public key	fmt.Printf("Secret key saved to: %s (KEEP SECRET!)\n", skPath)	}		log.Fatalf("Failed to write secret key: %v", err)	if err := os.WriteFile(skPath, skData, 0600); err != nil {	}		log.Fatalf("Failed to marshal secret key: %v", err)	if err != nil {	skData, err := kg.SecretKey().MarshalBinary()	skPath := filepath.Join(*outputDir, "secret.key")	// Save secret key (NEVER share this!)	evalKeySet := kg.GenEvaluationKeySet(rotSteps)	rotSteps := p.RotationSteps()	// Get rotation steps	kg := he.NewKeyGenerator(p.Params)	// Generate keys	fmt.Printf("Generated %s\n", p)	}		log.Fatalf("Failed to create profile: %v", err)	if err != nil {	}		log.Fatalf("Unknown profile: %s", *profile)	default:		p, err = params.NewProfileB()	case "B":		p, err = params.NewProfileA()	case "A":	switch *profile {	var err error	var p *params.Profile	// Create parameter profile	}		log.Fatalf("Failed to create output directory: %v", err)	if err := os.MkdirAll(*outputDir, 0700); err != nil {	// Create output directory	fs.Parse(os.Args[2:])	outputDir := fs.String("output", "./keys", "Output directory for keys")	profile := fs.String("profile", "A", "Parameter profile (A or B)")	fs := flag.NewFlagSet("keygen", flag.ExitOnError)func keygenCmd() {}Use "ddia <command> -h" for more information about a command.`)  help     Show this help message  inspect  Run privacy inspection on decrypted results  decrypt  Decrypt a ciphertext result  keygen   Generate CKKS keysCommands:  ddia <command> [options]Usage:	fmt.Println(`ddia - DDIA Key Management and Privacy Inspection Toolfunc printUsage() {}	}		os.Exit(1)		printUsage()		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", os.Args[1])	default:		printUsage()	case "help":		inspectCmd()	case "inspect":		decryptCmd()	case "decrypt":		keygenCmd()	case "keygen":	switch os.Args[1] {	}		os.Exit(1)		printUsage()	if len(os.Args) < 2 {func main() {)	"github.com/hkanpak21/lattigostats/pkg/privacy"	"github.com/hkanpak21/lattigostats/pkg/params"	"github.com/hkanpak21/lattigostats/pkg/he"	"path/filepath"	"os"	"log"	"fmt"	"flag"
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/hkanpak21/lattigostats/pkg/params"
+	"github.com/hkanpak21/lattigostats/pkg/privacy"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+	"github.com/tuneinsight/lattigo/v6/schemes/ckks"
+)
+
+func main() {
+	// Subcommands
+	keygenCmd := flag.NewFlagSet("keygen", flag.ExitOnError)
+	decryptCmd := flag.NewFlagSet("decrypt", flag.ExitOnError)
+	inspectCmd := flag.NewFlagSet("inspect", flag.ExitOnError)
+
+	if len(os.Args) < 2 {
+		printUsage()
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "keygen":
+		runKeygen(keygenCmd, os.Args[2:])
+	case "decrypt":
+		runDecrypt(decryptCmd, os.Args[2:])
+	case "inspect":
+		runInspect(inspectCmd, os.Args[2:])
+	default:
+		printUsage()
+		os.Exit(1)
+	}
+}
+
+func printUsage() {
+	fmt.Println("Usage: ddia <command> [options]")
+	fmt.Println("\nCommands:")
+	fmt.Println("  keygen   Generate CKKS keys")
+	fmt.Println("  decrypt  Decrypt ciphertext")
+	fmt.Println("  inspect  Run privacy inspection")
+}
+
+func runKeygen(cmd *flag.FlagSet, args []string) {
+	profile := cmd.String("profile", "A", "Parameter profile (A or B)")
+	outputDir := cmd.String("output", "./keys", "Output directory for keys")
+	cmd.Parse(args)
+
+	// Get parameters
+	var prof *params.Profile
+	var err error
+	switch *profile {
+	case "A":
+		prof, err = params.NewProfileA()
+	case "B":
+		prof, err = params.NewProfileB()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown profile: %s\n", *profile)
+		os.Exit(1)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create parameters: %v\n", err)
+		os.Exit(1)
+	}
+	p := prof.Params
+
+	// Create output directory
+	if err := os.MkdirAll(*outputDir, 0700); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create output directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Generate keys
+	fmt.Println("Generating secret key...")
+	kgen := rlwe.NewKeyGenerator(p)
+	sk := kgen.GenSecretKeyNew()
+
+	fmt.Println("Generating public key...")
+	pk := kgen.GenPublicKeyNew(sk)
+
+	fmt.Println("Generating relinearization key...")
+	rlk := kgen.GenRelinearizationKeyNew(sk)
+
+	fmt.Println("Generating Galois keys for rotations...")
+	// Generate rotation keys for power-of-2 rotations
+	slots := p.MaxSlots()
+	rotations := make([]int, 0)
+	for rot := 1; rot < slots; rot *= 2 {
+		rotations = append(rotations, rot)
+	}
+	galks := kgen.GenGaloisKeysNew(rlwe.GaloisElementsForInnerSum(p, 1, slots), sk)
+
+	// Save keys
+	fmt.Println("Saving keys...")
+
+	// Secret key (keep secure!)
+	skPath := filepath.Join(*outputDir, "secret.key")
+	if err := saveKey(skPath, sk); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save secret key: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Secret key saved to: %s (KEEP SECURE!)\n", skPath)
+
+	// Public key
+	pkPath := filepath.Join(*outputDir, "public.key")
+	if err := saveKey(pkPath, pk); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save public key: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Public key saved to: %s\n", pkPath)
+
+	// Relinearization key
+	rlkPath := filepath.Join(*outputDir, "relin.key")
+	if err := saveKey(rlkPath, rlk); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save relinearization key: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Relinearization key saved to: %s\n", rlkPath)
+
+	// Galois keys - save individually or as a set
+	galksDir := filepath.Join(*outputDir, "galois")
+	if err := os.MkdirAll(galksDir, 0700); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create galois directory: %v\n", err)
+		os.Exit(1)
+	}
+	for i, gk := range galks {
+		gkPath := filepath.Join(galksDir, fmt.Sprintf("galois_%d.key", i))
+		if err := saveKey(gkPath, gk); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to save Galois key %d: %v\n", i, err)
+			os.Exit(1)
+		}
+	}
+	fmt.Printf("Galois keys saved to: %s\n", galksDir)
+
+	// Save parameters metadata
+	meta := map[string]interface{}{
+		"profile":   *profile,
+		"log_n":     p.LogN(),
+		"log_scale": p.LogDefaultScale(),
+		"slots":     p.MaxSlots(),
+	}
+	metaPath := filepath.Join(*outputDir, "params.json")
+	f, err := os.Create(metaPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create params file: %v\n", err)
+		os.Exit(1)
+	}
+	json.NewEncoder(f).Encode(meta)
+	f.Close()
+	fmt.Printf("Parameters saved to: %s\n", metaPath)
+
+	fmt.Println("\nKey generation complete!")
+}
+
+func saveKey(path string, key interface{ MarshalBinary() ([]byte, error) }) error {
+	data, err := key.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0600)
+}
+
+func runDecrypt(cmd *flag.FlagSet, args []string) {
+	skPath := cmd.String("sk", "", "Path to secret key")
+	ctPath := cmd.String("ct", "", "Path to ciphertext")
+	outputPath := cmd.String("output", "", "Output path for plaintext")
+	paramsProfile := cmd.String("profile", "A", "Parameter profile")
+	cmd.Parse(args)
+
+	if *skPath == "" || *ctPath == "" {
+		fmt.Fprintln(os.Stderr, "Usage: ddia decrypt -sk <secret_key> -ct <ciphertext>")
+		os.Exit(1)
+	}
+
+	// Load parameters
+	var prof *params.Profile
+	var err error
+	switch *paramsProfile {
+	case "A":
+		prof, err = params.NewProfileA()
+	case "B":
+		prof, err = params.NewProfileB()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown profile: %s\n", *paramsProfile)
+		os.Exit(1)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create parameters: %v\n", err)
+		os.Exit(1)
+	}
+	p := prof.Params
+
+	// Load secret key
+	skData, err := os.ReadFile(*skPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read secret key: %v\n", err)
+		os.Exit(1)
+	}
+	sk := new(rlwe.SecretKey)
+	if err := sk.UnmarshalBinary(skData); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse secret key: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Load ciphertext
+	ctData, err := os.ReadFile(*ctPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read ciphertext: %v\n", err)
+		os.Exit(1)
+	}
+	ct := new(rlwe.Ciphertext)
+	if err := ct.UnmarshalBinary(ctData); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse ciphertext: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Decrypt
+	decryptor := rlwe.NewDecryptor(p, sk)
+	encoder := ckks.NewEncoder(p)
+
+	pt := decryptor.DecryptNew(ct)
+	values := make([]complex128, p.MaxSlots())
+	encoder.Decode(pt, values)
+
+	// Output
+	realValues := make([]float64, len(values))
+	for i, v := range values {
+		realValues[i] = real(v)
+	}
+
+	if *outputPath != "" {
+		f, err := os.Create(*outputPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create output file: %v\n", err)
+			os.Exit(1)
+		}
+		json.NewEncoder(f).Encode(realValues)
+		f.Close()
+		fmt.Printf("Decrypted values saved to: %s\n", *outputPath)
+	} else {
+		// Print first few values
+		fmt.Println("Decrypted values (first 10):")
+		for i := 0; i < 10 && i < len(realValues); i++ {
+			fmt.Printf("  [%d]: %f\n", i, realValues[i])
+		}
+	}
+}
+
+func runInspect(cmd *flag.FlagSet, args []string) {
+	inputPath := cmd.String("input", "", "Path to decrypted values JSON")
+	policyPath := cmd.String("policy", "", "Path to privacy policy JSON")
+	jobID := cmd.String("job", "", "Job ID for audit")
+	operation := cmd.String("op", "", "Operation type")
+	count := cmd.Int("count", 0, "Sample count")
+	cmd.Parse(args)
+
+	if *inputPath == "" {
+		fmt.Fprintln(os.Stderr, "Usage: ddia inspect -input <values.json> [-policy <policy.json>]")
+		os.Exit(1)
+	}
+
+	// Load policy
+	var policy *privacy.Policy
+	if *policyPath != "" {
+		var err error
+		policy, err = privacy.LoadPolicy(*policyPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load policy: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		policy = privacy.DefaultPolicy()
+	}
+
+	// Load values
+	f, err := os.Open(*inputPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open input: %v\n", err)
+		os.Exit(1)
+	}
+	var values []float64
+	json.NewDecoder(f).Decode(&values)
+	f.Close()
+
+	// Run inspection
+	inspector := privacy.NewInspector(policy)
+
+	// For simple numeric result, inspect first value
+	if len(values) > 0 {
+		result := inspector.InspectNumeric(values[0], *count, *jobID, *operation)
+
+		output, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Println(string(output))
+	}
+}

@@ -1,257 +1,278 @@
-package ordinal
 // Package ordinal implements ordinal statistical operations:
-// k-percentile using BMVs and comparison.
+// k-percentile computation using BMVs and comparison.
 package ordinal
 
 import (
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return q1, q2, q3, nil	}		return nil, nil, nil, fmt.Errorf("failed to compute Q3: %w", err)	if err != nil {	q3, err = o.Percentile(bmvBlocks, numCategories, &cfg75)	}		return nil, nil, nil, fmt.Errorf("failed to compute Q2: %w", err)	if err != nil {	q2, err = o.Percentile(bmvBlocks, numCategories, &cfg50)	}		return nil, nil, nil, fmt.Errorf("failed to compute Q1: %w", err)	if err != nil {	q1, err = o.Percentile(bmvBlocks, numCategories, &cfg25)	cfg75 := DefaultPercentileConfig(75)	cfg50 := DefaultPercentileConfig(50)	cfg25 := DefaultPercentileConfig(25)) (q1, q2, q3 *rlwe.Ciphertext, err error) {	numCategories int,	bmvBlocks map[int][]*rlwe.Ciphertext,func (o *OrdinalOps) Quartiles(// Quartiles computes Q1 (25th), Q2 (50th), and Q3 (75th) percentiles}	return o.Percentile(bmvBlocks, numCategories, &cfg)	cfg := DefaultPercentileConfig(50)) (*rlwe.Ciphertext, error) {	numCategories int,	bmvBlocks map[int][]*rlwe.Ciphertext,func (o *OrdinalOps) Median(// Median computes the median (50th percentile) of an ordinal variable}	return result, nil	}		return nil, fmt.Errorf("failed to add constant: %w", err)	if err != nil {	result, err := o.eval.AddConst(scaled, complex(1.125, 0))	// -0.5(x-0.5)² + 1.125	}		return nil, fmt.Errorf("failed to scale: %w", err)	if err != nil {	scaled, err := o.eval.MulConst(squared, complex(-0.5, 0))	// -0.5 * (x - 0.5)²	}		return nil, fmt.Errorf("failed to square: %w", err)	if err != nil {	squared, err := o.eval.Mul(shifted, shifted)	// (x - 0.5)²	}		return nil, fmt.Errorf("failed to shift: %w", err)	if err != nil {	shifted, err := o.eval.AddConst(x, complex(-0.5, 0))	// x - 0.5func (o *OrdinalOps) applyFlipMapping(x *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// This creates a bump that peaks at x=0.5// applyFlipMapping applies f(x) = -0.5(x-0.5)² + 1.125}	return percentileIdx, nil	}		}			}				return nil, fmt.Errorf("failed to add weighted category %d: %w", j+1, err)			if err := o.eval.AddInPlace(percentileIdx, weighted); err != nil {		} else {			percentileIdx = weighted		if percentileIdx == nil {		}			return nil, fmt.Errorf("failed to weight category %d: %w", j+1, err)		if err != nil {		weighted, err := o.eval.MulConst(indicators[j], complex(float64(j+1), 0))		// j+1 * indicator[j] (categories are 1-indexed)	for j := 0; j < numCategories; j++ {	var percentileIdx *rlwe.Ciphertext	// This gives us the percentile index	// Step 5: Compute weighted sum: Σ j * indicator[j]	}		}			return nil, fmt.Errorf("failed to apply flip for category %d: %w", j+1, err)		if err != nil {		indicators[j], err = o.applyFlipMapping(indicator)		// This creates a bump at the transition point		// Apply flip mapping f(x) = -0.5(x-0.5)² + 1.125		}			return nil, fmt.Errorf("failed to scale for category %d: %w", j+1, err)		if err != nil {		indicator, err = o.eval.MulConst(indicator, 0.5)		}			return nil, fmt.Errorf("failed to shift for category %d: %w", j+1, err)		if err != nil {		indicator, err := o.eval.AddConst(sign, 1)		// Map from [-1, 1] to [0, 1]		}			return nil, fmt.Errorf("failed to compute sign for category %d: %w", j+1, err)		if err != nil {		sign, err := o.approxOps.ApproxSign(diff, config.ApproxSignCfg)		// sign(diff): positive means cumulative > threshold		}			return nil, fmt.Errorf("failed to subtract threshold for category %d: %w", j+1, err)		if err != nil {		diff, err := o.eval.AddConst(cumRatio, complex(-kThreshold, 0))		// cumulative[j]/R - k/100		}			return nil, fmt.Errorf("failed to compute ratio for category %d: %w", j+1, err)		if err != nil {		cumRatio, err := o.eval.Mul(cumulatives[j], invR)		// cumulative[j] / R	for j := 0; j < numCategories; j++ {	indicators := make([]*rlwe.Ciphertext, numCategories)	kThreshold := config.K / 100.0	// Then flip to get indicator	// Step 4: For each category, compute (cumulative/R - k/100) and apply sign	}		return nil, fmt.Errorf("failed to compute inverse count: %w", err)	if err != nil {	invR, err := o.numericOps.InvNthSqrt(totalCount, 1, config.InvNthSqrtCfg)	// Step 3: Compute invR = 1/totalCount	}		cumulatives[j] = cumSum.CopyNew()		}			}				return nil, fmt.Errorf("failed to compute cumulative for category %d: %w", j+1, err)			if err != nil {			cumSum, err = o.eval.Add(cumSum, frequencies[j])			var err error		} else {			cumSum = frequencies[j].CopyNew()		if cumSum == nil {	for j := 0; j < numCategories; j++ {	var cumSum *rlwe.Ciphertext	cumulatives := make([]*rlwe.Ciphertext, numCategories)	// cumulative[j] = sum(frequencies[0:j+1])	// Step 2: Build cumulative histogram	}		}			}				return nil, fmt.Errorf("failed to add frequency for category %d: %w", cat, err)			if err := o.eval.AddInPlace(totalCount, freq); err != nil {		} else {			totalCount = freq.CopyNew()		if totalCount == nil {		// Accumulate total count		frequencies[cat-1] = freq		}			return nil, fmt.Errorf("failed to compute frequency for category %d: %w", cat, err)		if err != nil {		freq, err := o.numericOps.CountSum(blocks)		// Sum across all blocks		}			return nil, fmt.Errorf("BMV blocks not found for category %d", cat)		if !ok {		blocks, ok := bmvBlocks[cat]	for cat := 1; cat <= numCategories; cat++ {	var totalCount *rlwe.Ciphertext	frequencies := make([]*rlwe.Ciphertext, numCategories)	// freq[j] = sum of bmv[j] across all blocks and slots	// Step 1: Compute frequency for each category value	}		return nil, fmt.Errorf("numCategories must be positive")	if numCategories <= 0 {	}		config = *cfg	if cfg != nil {	config := DefaultPercentileConfig(50) // Default to median) (*rlwe.Ciphertext, error) {	cfg *PercentileConfig,	numCategories int,	bmvBlocks map[int][]*rlwe.Ciphertext, // category -> blocksfunc (o *OrdinalOps) Percentile(// 5. Apply flip mapping and sum to get percentile index// 4. Compare cumulative/R with k/100 using APPROXSIGN// 3. Compute invR = 1/total_count// 2. Build cumulative histogram// 1. Compute frequency per value by summing BMV blocks// Algorithm (matches paper's Algorithm 7)://// Returns an encrypted ciphertext approximating the percentile bucket index// Percentile computes the k-th percentile of an ordinal variable}	}		InvNthSqrtCfg: nil, // Use defaults		ApproxSignCfg: nil, // Use defaults		K:             k,	return PercentileConfig{func DefaultPercentileConfig(k float64) PercentileConfig {// DefaultPercentileConfig returns default configuration}	InvNthSqrtCfg   *numeric.InvNthSqrtConfig	ApproxSignCfg   *approx.ApproxSignConfig	K               float64 // Percentile value (0-100)type PercentileConfig struct {// PercentileConfig configures the k-percentile algorithm}	}		slots:      slots,		approxOps:  approx.NewApproxOps(eval, encoder, slots),		numericOps: numeric.NewNumericOps(eval, encoder, slots),		encoder:    encoder,		eval:       eval,	return &OrdinalOps{func NewOrdinalOps(eval *he.Evaluator, encoder *he.Encoder, slots int) *OrdinalOps {// NewOrdinalOps creates a new OrdinalOps instance}	slots      int	approxOps  *approx.ApproxOps	numericOps *numeric.NumericOps	encoder    *he.Encoder	eval       *he.Evaluatortype OrdinalOps struct {// OrdinalOps provides ordinal statistical operations on encrypted data)	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"	"github.com/hkanpak21/lattigostats/pkg/ops/approx"	"github.com/hkanpak21/lattigostats/pkg/he"	"github.com/tuneinsight/lattigo/v6/core/rlwe"	"fmt"
+	"fmt"
+	"sort"
+
+	"github.com/hkanpak21/lattigostats/pkg/he"
+	"github.com/hkanpak21/lattigostats/pkg/ops/approx"
+	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+)
+
+// OrdinalOp computes ordinal statistics on encrypted data
+type OrdinalOp struct {
+	eval      *he.Evaluator
+	numericOp *numeric.NumericOp
+	approxOp  *approx.ApproxOp
+}
+
+// NewOrdinalOp creates a new ordinal operations handler
+func NewOrdinalOp(eval *he.Evaluator) *OrdinalOp {
+	return &OrdinalOp{
+		eval:      eval,
+		numericOp: numeric.NewNumericOp(eval),
+		approxOp:  approx.NewApproxOp(eval),
+	}
+}
+
+// PercentileConfig configures k-percentile computation
+type PercentileConfig struct {
+	K          float64 // Percentile value (0-100)
+	Categories int     // S_f: number of ordinal categories
+}
+
+// BMVStore provides access to BMV ciphertexts for ordinal values
+type BMVStore interface {
+	// GetBMV returns the BMV block for the given value and block index
+	GetBMV(value int, blockIndex int) (*rlwe.Ciphertext, error)
+	// BlockCount returns the number of blocks
+	BlockCount() int
+}
+
+// Percentile computes the k-th percentile of an ordinal variable
+// Returns the percentile bucket index (1 to Categories)
+func (o *OrdinalOp) Percentile(
+	validityBlocks []*rlwe.Ciphertext,
+	bmvStore BMVStore,
+	config PercentileConfig,
+) (*rlwe.Ciphertext, error) {
+	blockCount := bmvStore.BlockCount()
+
+	// Step 1: Compute frequency for each value by summing BMV blocks
+	freqs := make([]*rlwe.Ciphertext, config.Categories)
+	for v := 1; v <= config.Categories; v++ {
+		var sum *rlwe.Ciphertext
+		for b := 0; b < blockCount; b++ {
+			bmv, err := bmvStore.GetBMV(v, b)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get BMV for value %d block %d: %w", v, b, err)
+			}
+
+			// Multiply by validity
+			masked, err := o.eval.Mul(bmv, validityBlocks[b])
+			if err != nil {
+				return nil, fmt.Errorf("value %d block %d mul failed: %w", v, b, err)
+			}
+			masked, err = o.eval.Rescale(masked)
+			if err != nil {
+				return nil, fmt.Errorf("value %d block %d rescale failed: %w", v, b, err)
+			}
+
+			if sum == nil {
+				sum = masked
+			} else {
+				err = o.eval.AddInPlace(sum, masked)
+				if err != nil {
+					return nil, fmt.Errorf("value %d block %d add failed: %w", v, b, err)
+				}
+			}
+		}
+
+		// Sum across slots to get total frequency for this value
+		freq, err := o.eval.SumSlots(sum)
+		if err != nil {
+			return nil, fmt.Errorf("value %d sum slots failed: %w", v, err)
+		}
+		freqs[v-1] = freq
+	}
+
+	// Step 2: Compute cumulative histogram
+	// cumul[i] = sum(freq[0..i])
+	cumul := make([]*rlwe.Ciphertext, config.Categories)
+	cumul[0] = freqs[0].CopyNew()
+	for i := 1; i < config.Categories; i++ {
+		var err error
+		cumul[i], err = o.eval.Add(cumul[i-1], freqs[i])
+		if err != nil {
+			return nil, fmt.Errorf("cumul %d add failed: %w", i, err)
+		}
+	}
+
+	// Step 3: Compute total count R and inverse
+	R := cumul[config.Categories-1]
+	invR, err := o.numericOp.INVNTHSQRT(R, numeric.DefaultINVConfig())
+	if err != nil {
+		return nil, fmt.Errorf("inv R failed: %w", err)
+	}
+
+	// Step 4: Compute cumul[i] / R and compare with k/100
+	kThreshold := config.K / 100.0
+	signConfig := approx.DefaultApproxSignConfig()
+
+	// For each bucket, compute: sign(cumul[i]/R - k/100)
+	// Then apply mapping to get indicator
+	indicators := make([]*rlwe.Ciphertext, config.Categories)
+	for i := 0; i < config.Categories; i++ {
+		// cumul[i] * invR
+		ratio, err := o.eval.Mul(cumul[i], invR)
+		if err != nil {
+			return nil, fmt.Errorf("ratio %d mul failed: %w", i, err)
+		}
+		ratio, err = o.eval.Rescale(ratio)
+		if err != nil {
+			return nil, fmt.Errorf("ratio %d rescale failed: %w", i, err)
+		}
+
+		// ratio - k/100
+		diff, err := o.eval.AddConst(ratio, complex(-kThreshold, 0))
+		if err != nil {
+			return nil, fmt.Errorf("diff %d failed: %w", i, err)
+		}
+
+		// Approximate sign
+		sign, err := o.approxOp.APPROXSIGN(diff, signConfig)
+		if err != nil {
+			return nil, fmt.Errorf("sign %d failed: %w", i, err)
+		}
+
+		// Map sign to indicator using f(x) = -0.5(x-0.5)^2 + 1.125
+		// This maps: sign=-1 (below threshold) -> 0
+		//            sign=1 (at or above threshold) -> 1
+		indicators[i], err = o.applyFlipMapping(sign)
+		if err != nil {
+			return nil, fmt.Errorf("flip %d failed: %w", i, err)
+		}
+	}
+
+	// Step 5: Find the first bucket where indicator becomes 1
+	// Percentile = first i where cumul[i]/R >= k/100
+	// Use: Σ (1 - indicator[i]) to count how many are below
+	// Then percentile index = count + 1
+
+	var belowCount *rlwe.Ciphertext
+	for i := 0; i < config.Categories; i++ {
+		// 1 - indicator[i]
+		notInd, err := o.eval.MulConst(indicators[i], complex(-1, 0))
+		if err != nil {
+			return nil, fmt.Errorf("neg indicator %d failed: %w", i, err)
+		}
+		notInd, err = o.eval.AddConst(notInd, complex(1, 0))
+		if err != nil {
+			return nil, fmt.Errorf("1-indicator %d failed: %w", i, err)
+		}
+
+		if belowCount == nil {
+			belowCount = notInd
+		} else {
+			err = o.eval.AddInPlace(belowCount, notInd)
+			if err != nil {
+				return nil, fmt.Errorf("sum indicators %d failed: %w", i, err)
+			}
+		}
+	}
+
+	// Percentile bucket = belowCount + 1 (but clamped to Categories)
+	result, err := o.eval.AddConst(belowCount, complex(1, 0))
+	if err != nil {
+		return nil, fmt.Errorf("final add 1 failed: %w", err)
+	}
+
+	return result, nil
+}
+
+// applyFlipMapping applies f(x) = -0.5(x-0.5)^2 + 1.125
+// Maps sign output to clean 0/1 indicator
+func (o *OrdinalOp) applyFlipMapping(x *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	// f(x) = -0.5(x-0.5)^2 + 1.125
+	// = -0.5(x^2 - x + 0.25) + 1.125
+	// = -0.5x^2 + 0.5x - 0.125 + 1.125
+	// = -0.5x^2 + 0.5x + 1
+
+	// x^2
+	x2, err := o.eval.Mul(x, x)
+	if err != nil {
+		return nil, fmt.Errorf("x^2 failed: %w", err)
+	}
+	x2, err = o.eval.Rescale(x2)
+	if err != nil {
+		return nil, fmt.Errorf("x^2 rescale failed: %w", err)
+	}
+
+	// -0.5x^2
+	term1, err := o.eval.MulConst(x2, complex(-0.5, 0))
+	if err != nil {
+		return nil, fmt.Errorf("-0.5x^2 failed: %w", err)
+	}
+
+	// 0.5x
+	term2, err := o.eval.MulConst(x, complex(0.5, 0))
+	if err != nil {
+		return nil, fmt.Errorf("0.5x failed: %w", err)
+	}
+
+	// -0.5x^2 + 0.5x
+	result, err := o.eval.Add(term1, term2)
+	if err != nil {
+		return nil, fmt.Errorf("term1+term2 failed: %w", err)
+	}
+
+	// + 1
+	result, err = o.eval.AddConst(result, complex(1, 0))
+	if err != nil {
+		return nil, fmt.Errorf("+1 failed: %w", err)
+	}
+
+	return result, nil
+}
+
+// PlaintextPercentile computes k-percentile from plaintext (for validation)
+func PlaintextPercentile(values []int, valid []bool, k float64) int {
+	// Collect valid values
+	var validValues []int
+	for i, v := range values {
+		if valid[i] {
+			validValues = append(validValues, v)
+		}
+	}
+
+	if len(validValues) == 0 {
+		return 0
+	}
+
+	// Sort
+	sort.Ints(validValues)
+
+	// Find k-th percentile
+	idx := int(float64(len(validValues)) * k / 100.0)
+	if idx >= len(validValues) {
+		idx = len(validValues) - 1
+	}
+	if idx < 0 {
+		idx = 0
+	}
+
+	return validValues[idx]
+}
+
+// PlaintextCumulativeHistogram computes cumulative histogram (for validation)
+func PlaintextCumulativeHistogram(values []int, valid []bool, categories int) []int {
+	// Count frequencies
+	freq := make([]int, categories)
+	for i, v := range values {
+		if valid[i] && v >= 1 && v <= categories {
+			freq[v-1]++
+		}
+	}
+
+	// Cumulative
+	cumul := make([]int, categories)
+	cumul[0] = freq[0]
+	for i := 1; i < categories; i++ {
+		cumul[i] = cumul[i-1] + freq[i]
+	}
+
+	return cumul
+}

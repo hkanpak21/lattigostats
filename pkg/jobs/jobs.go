@@ -1,424 +1,302 @@
-package jobs
-// Package jobs provides JobSpec parsing, planning, and execution for statistical queries.
+// Package jobs provides JobSpec parsing, validation, and execution planning
+// for statistical operations on encrypted tables.
 package jobs
 
 import (
 	"encoding/json"
 	"fmt"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return total, nil	}		}			}				return nil, fmt.Errorf("failed to add block %d: %w", i, err)			if err := e.eval.AddInPlace(total, blockSum); err != nil {		} else {			total = blockSum		if total == nil {		}			return nil, fmt.Errorf("failed to sum block %d: %w", i, err)		if err != nil {		blockSum, err := e.eval.SumSlots(r, e.slots)	for i, r := range results {	var total *rlwe.Ciphertext	// Sum all results	}		return nil, err	if err != nil {	results, err := e.approxOps.TableLookup(catBlocks, numBlocks, targetCat, &cfg)	cfg := approx.DefaultDiscreteEqualZeroConfig(col.CategoryCount)	}		return nil, fmt.Errorf("column %s not found in schema", catCol)	if col == nil {	col := data.Metadata.Schema.GetColumn(catCol)	targetCat := spec.Conditions[0].Value	}		return nil, fmt.Errorf("numeric column %s not found", numCol)	if !ok {	numBlocks, ok := data.ColumnBlocks[numCol]	}		return nil, fmt.Errorf("categorical column %s not found", catCol)	if !ok {	catBlocks, ok := data.ColumnBlocks[catCol]	numCol := spec.Columns[1]	catCol := spec.Columns[0]func (e *JobExecutor) executeLookup(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.ordinalOps.Percentile(bmvBlocks, col.CategoryCount, &cfg)	cfg := ordinal.DefaultPercentileConfig(spec.K)	}		bmvBlocks[cat] = blocks	for cat, blocks := range bmvSet {	bmvBlocks := make(map[int][]*rlwe.Ciphertext)	// Convert BMVSet to the format expected by ordinal ops	}		return nil, fmt.Errorf("BMV set for column %s not found", colName)	if !ok {	bmvSet, ok := data.BMVSets[colName]	}		return nil, fmt.Errorf("percentile requires ordinal column, got %s", col.Type)	if col.Type != schema.Ordinal {	}		return nil, fmt.Errorf("column %s not found in schema", colName)	if col == nil {	col := data.Metadata.Schema.GetColumn(colName)	// Get the column's schema to find category count	colName := spec.Columns[0]func (e *JobExecutor) executePercentile(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.categoricalOps.BinVariance(targetBlocks, validity, data.BMVSets, conditions)	}		}			Value:      c.Value,			ColumnName: c.Column,		conditions[i] = categorical.Condition{	for i, c := range spec.Conditions {	conditions := make([]categorical.Condition, len(spec.Conditions))	}		return nil, fmt.Errorf("validity for target column %s not found", spec.Target)	if !ok {	validity, ok := data.ValidityBlocks[spec.Target]	}		return nil, fmt.Errorf("target column %s not found", spec.Target)	if !ok {	targetBlocks, ok := data.ColumnBlocks[spec.Target]func (e *JobExecutor) executeBinVar(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.categoricalOps.BinAverage(targetBlocks, validity, data.BMVSets, conditions)	}		}			Value:      c.Value,			ColumnName: c.Column,		conditions[i] = categorical.Condition{	for i, c := range spec.Conditions {	conditions := make([]categorical.Condition, len(spec.Conditions))	}		return nil, fmt.Errorf("validity for target column %s not found", spec.Target)	if !ok {	validity, ok := data.ValidityBlocks[spec.Target]	}		return nil, fmt.Errorf("target column %s not found", spec.Target)	if !ok {	targetBlocks, ok := data.ColumnBlocks[spec.Target]func (e *JobExecutor) executeBinAvg(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.categoricalOps.BinCount(validity, data.BMVSets, conditions)	}		}			Value:      c.Value,			ColumnName: c.Column,		conditions[i] = categorical.Condition{	for i, c := range spec.Conditions {	conditions := make([]categorical.Condition, len(spec.Conditions))	}		}			break			validity = v		for _, v := range data.ValidityBlocks {		// Try to get any validity block	if !ok {	validity, ok := data.ValidityBlocks[spec.Conditions[0].Column]	// Get validity blocks (use first condition's column)func (e *JobExecutor) executeBinCount(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.numericOps.Correlation(blocks1, blocks2, validity)	}		return nil, fmt.Errorf("validity for column %s not found", col1)	if !ok {	validity, ok := data.ValidityBlocks[col1]	// Use validity from first column (or could intersect)	}		return nil, fmt.Errorf("column %s not found", col2)	if !ok {	blocks2, ok := data.ColumnBlocks[col2]	}		return nil, fmt.Errorf("column %s not found", col1)	if !ok {	blocks1, ok := data.ColumnBlocks[col1]	col1, col2 := spec.Columns[0], spec.Columns[1]func (e *JobExecutor) executeCorr(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.numericOps.StdDev(blocks, validity)	}		return nil, fmt.Errorf("validity for column %s not found", colName)	if !ok {	validity, ok := data.ValidityBlocks[colName]	}		return nil, fmt.Errorf("column %s not found", colName)	if !ok {	blocks, ok := data.ColumnBlocks[colName]	colName := spec.Columns[0]func (e *JobExecutor) executeStdDev(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.numericOps.Variance(blocks, validity)	}		return nil, fmt.Errorf("validity for column %s not found", colName)	if !ok {	validity, ok := data.ValidityBlocks[colName]	}		return nil, fmt.Errorf("column %s not found", colName)	if !ok {	blocks, ok := data.ColumnBlocks[colName]	colName := spec.Columns[0]func (e *JobExecutor) executeVariance(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return e.numericOps.Mean(blocks, validity)	}		return nil, fmt.Errorf("validity for column %s not found", colName)	if !ok {	validity, ok := data.ValidityBlocks[colName]	}		return nil, fmt.Errorf("column %s not found", colName)	if !ok {	blocks, ok := data.ColumnBlocks[colName]	colName := spec.Columns[0]func (e *JobExecutor) executeMean(spec *JobSpec, data *TableData) (*rlwe.Ciphertext, error) {}	return result, nil	result.Stats = e.eval.GetStats()	result.Ciphertext = ct	}		return result, err		result.Error = err.Error()	if err != nil {	}		err = fmt.Errorf("unsupported operation: %s", spec.Operation)	default:		ct, err = e.executeLookup(spec, data)	case OpLookup:		ct, err = e.executePercentile(spec, data)	case OpPercentile:		ct, err = e.executeBinVar(spec, data)	case OpBinVar:		ct, err = e.executeBinAvg(spec, data)	case OpBinAvg:		ct, err = e.executeBinCount(spec, data)	case OpBinCount:		ct, err = e.executeCorr(spec, data)	case OpCorr:		ct, err = e.executeStdDev(spec, data)	case OpStdDev:		ct, err = e.executeVariance(spec, data)	case OpVariance:		ct, err = e.executeMean(spec, data)	case OpMean:	switch spec.Operation {	var err error	var ct *rlwe.Ciphertext	}		Operation: spec.Operation,		JobID:     spec.ID,	result := &JobResult{	}		return &JobResult{JobID: spec.ID, Error: err.Error()}, err	if err := spec.Validate(); err != nil {func (e *JobExecutor) Execute(spec *JobSpec, data *TableData) (*JobResult, error) {// Execute runs a job spec on the provided table data}	BMVSets        map[string]categorical.BMVSet         // columnName -> BMV set	ValidityBlocks map[string][]*rlwe.Ciphertext         // columnName -> validity blocks	ColumnBlocks   map[string][]*rlwe.Ciphertext         // columnName -> blocks	Metadata       *schema.TableMetadatatype TableData struct {// TableData holds encrypted table data for job execution}	}		slots:          slots,		ordinalOps:     ordinal.NewOrdinalOps(eval, encoder, slots),		approxOps:      approx.NewApproxOps(eval, encoder, slots),		categoricalOps: categorical.NewCategoricalOps(eval, encoder, slots),		numericOps:     numeric.NewNumericOps(eval, encoder, slots),		encoder:        encoder,		eval:           eval,	return &JobExecutor{func NewJobExecutor(eval *he.Evaluator, encoder *he.Encoder, slots int) *JobExecutor {// NewJobExecutor creates a new job executor}	slots          int	ordinalOps     *ordinal.OrdinalOps	approxOps      *approx.ApproxOps	categoricalOps *categorical.CategoricalOps	numericOps     *numeric.NumericOps	encoder        *he.Encoder	eval           *he.Evaluatortype JobExecutor struct {// JobExecutor executes job specs on encrypted data}	Error      string             `json:"error,omitempty"`	Stats      *he.Stats          `json:"-"` // Execution statistics	Ciphertext *rlwe.Ciphertext   `json:"-"` // Encrypted result	Operation  OperationType      `json:"operation"`	JobID      string             `json:"job_id"`type JobResult struct {// JobResult holds the result of a job execution}	return encoder.Encode(j)	encoder.SetIndent("", "  ")	encoder := json.NewEncoder(f)	defer f.Close()	}		return fmt.Errorf("failed to create job spec file: %w", err)	if err != nil {	f, err := os.Create(path)func (j *JobSpec) SaveToFile(path string) error {// SaveJobSpec saves a job spec to a JSON file}	return &spec, nil	}		return nil, fmt.Errorf("invalid job spec: %w", err)	if err := spec.Validate(); err != nil {	}		return nil, fmt.Errorf("failed to parse job spec: %w", err)	if err := json.NewDecoder(r).Decode(&spec); err != nil {	var spec JobSpecfunc ParseJobSpec(r io.Reader) (*JobSpec, error) {// ParseJobSpec parses a job spec from JSON}	return ParseJobSpec(f)	defer f.Close()	}		return nil, fmt.Errorf("failed to open job spec: %w", err)	if err != nil {	f, err := os.Open(path)func LoadJobSpec(path string) (*JobSpec, error) {// LoadJobSpec loads a job spec from a JSON file}	return nil	}		return fmt.Errorf("unknown operation: %s", j.Operation)	default:		// LBc has its own validation	case OpLargeBc:		}			return fmt.Errorf("lookup requires exactly 1 condition")		if len(j.Conditions) != 1 {		}			return fmt.Errorf("lookup requires at least 2 columns (categorical, numeric)")		if len(j.Columns) < 2 {	case OpLookup:		}			return fmt.Errorf("percentile k must be between 0 and 100")		if j.K < 0 || j.K > 100 {		}			return fmt.Errorf("percentile requires exactly 1 column")		if len(j.Columns) != 1 {	case OpPercentile:		}			return fmt.Errorf("%s requires a target column", j.Operation)		if j.Target == "" {	case OpBinAvg, OpBinVar:		}			return fmt.Errorf("bc requires at least 1 condition")		if len(j.Conditions) == 0 {	case OpBinCount:		}			return fmt.Errorf("corr requires exactly 2 columns, got %d", len(j.Columns))		if len(j.Columns) != 2 {	case OpCorr:		}			return fmt.Errorf("%s requires exactly 1 column, got %d", j.Operation, len(j.Columns))		if len(j.Columns) != 1 {	case OpMean, OpVariance, OpStdDev:	switch j.Operation {	}		return fmt.Errorf("job ID is required")	if j.ID == "" {func (j *JobSpec) Validate() error {// Validate checks that the job spec is valid}	Description string                 `json:"description,omitempty"` // Human-readable description	PolicyTag   string                 `json:"policy_tag,omitempty"`  // Privacy policy identifier	K           float64                `json:"k,omitempty"`           // Percentile value (0-100)	Conditions  []CategoricalCondition `json:"conditions,omitempty"`  // Filter conditions	Target      string                 `json:"target,omitempty"`      // Target numeric column for Ba/Bv	Columns     []string               `json:"columns"`               // Input columns (1 for mean/var, 2 for corr)	Operation   OperationType          `json:"operation"`	ID          string                 `json:"id"`type JobSpec struct {// JobSpec defines a statistical query to execute}	Value  int    `json:"value"`	Column string `json:"column"`type CategoricalCondition struct {// CategoricalCondition represents a filter condition (column = value))	OpLookup     OperationType = "lookup"	OpPercentile OperationType = "percentile"	OpLargeBc    OperationType = "lbc"	OpBinVar     OperationType = "bv"	OpBinAvg     OperationType = "ba"	OpBinCount   OperationType = "bc"	OpCorr       OperationType = "corr"	OpStdDev     OperationType = "stdev"	OpVariance   OperationType = "var"	OpMean       OperationType = "mean"const (type OperationType string// OperationType identifies the statistical operation to perform)	"github.com/hkanpak21/lattigostats/pkg/schema"	"github.com/hkanpak21/lattigostats/pkg/ops/ordinal"	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"	"github.com/hkanpak21/lattigostats/pkg/ops/categorical"	"github.com/hkanpak21/lattigostats/pkg/ops/approx"	"github.com/hkanpak21/lattigostats/pkg/he"	"github.com/tuneinsight/lattigo/v6/core/rlwe"	"os"	"io"
+	"io"
+	"os"
+)
+
+// Operation represents the type of statistical operation
+type Operation string
+
+const (
+	OpMean       Operation = "mean"
+	OpVariance   Operation = "var"
+	OpStdev      Operation = "stdev"
+	OpCorr       Operation = "corr"
+	OpBc         Operation = "bc"
+	OpBa         Operation = "ba"
+	OpBv         Operation = "bv"
+	OpLBc        Operation = "lbc"
+	OpPercentile Operation = "percentile"
+	OpLookup     Operation = "lookup"
+)
+
+// Condition represents a categorical filter condition
+type Condition struct {
+	Column string `json:"column"`
+	Value  int    `json:"value"`
+}
+
+// JobSpec defines a statistical computation request
+type JobSpec struct {
+	// ID is a unique identifier for the job
+	ID string `json:"id"`
+
+	// Operation to perform
+	Operation Operation `json:"operation"`
+
+	// Table is the name of the encrypted table
+	Table string `json:"table"`
+
+	// InputColumns are the columns used in computation
+	InputColumns []string `json:"input_columns,omitempty"`
+
+	// TargetColumn is the numeric column for Ba/Bv operations
+	TargetColumn string `json:"target_column,omitempty"`
+
+	// Conditions are categorical filters for BIN-OP
+	Conditions []Condition `json:"conditions,omitempty"`
+
+	// K is the percentile value (0-100)
+	K float64 `json:"k,omitempty"`
+
+	// LookupValue is the value to look up in table lookup
+	LookupValue int `json:"lookup_value,omitempty"`
+
+	// PrivacyPolicy tags for DDIA processing
+	PrivacyPolicy string `json:"privacy_policy,omitempty"`
+
+	// OutputFormat specifies result format
+	OutputFormat string `json:"output_format,omitempty"`
+}
+
+// Validate checks that the JobSpec is well-formed
+func (j *JobSpec) Validate() error {
+	if j.ID == "" {
+		return fmt.Errorf("job ID is required")
+	}
+	if j.Table == "" {
+		return fmt.Errorf("table name is required")
+	}
+
+	switch j.Operation {
+	case OpMean, OpVariance, OpStdev:
+		if len(j.InputColumns) != 1 {
+			return fmt.Errorf("operation %s requires exactly one input column", j.Operation)
+		}
+	case OpCorr:
+		if len(j.InputColumns) != 2 {
+			return fmt.Errorf("operation %s requires exactly two input columns", j.Operation)
+		}
+	case OpBc:
+		if len(j.Conditions) == 0 {
+			return fmt.Errorf("operation bc requires at least one condition")
+		}
+	case OpBa, OpBv:
+		if len(j.Conditions) == 0 {
+			return fmt.Errorf("operation %s requires at least one condition", j.Operation)
+		}
+		if j.TargetColumn == "" {
+			return fmt.Errorf("operation %s requires a target column", j.Operation)
+		}
+	case OpLBc:
+		if len(j.InputColumns) < 2 {
+			return fmt.Errorf("operation lbc requires at least two input columns")
+		}
+	case OpPercentile:
+		if len(j.InputColumns) != 1 {
+			return fmt.Errorf("operation percentile requires exactly one ordinal column")
+		}
+		if j.K < 0 || j.K > 100 {
+			return fmt.Errorf("k must be between 0 and 100")
+		}
+	case OpLookup:
+		if len(j.InputColumns) != 1 {
+			return fmt.Errorf("operation lookup requires exactly one categorical column")
+		}
+		if j.TargetColumn == "" {
+			return fmt.Errorf("operation lookup requires a target column")
+		}
+	default:
+		return fmt.Errorf("unknown operation: %s", j.Operation)
+	}
+
+	return nil
+}
+
+// LoadJobSpec loads a job specification from a JSON file
+func LoadJobSpec(path string) (*JobSpec, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open job spec file: %w", err)
+	}
+	defer f.Close()
+	return ParseJobSpec(f)
+}
+
+// ParseJobSpec parses a job specification from JSON
+func ParseJobSpec(r io.Reader) (*JobSpec, error) {
+	var job JobSpec
+	decoder := json.NewDecoder(r)
+	if err := decoder.Decode(&job); err != nil {
+		return nil, fmt.Errorf("failed to parse job spec: %w", err)
+	}
+	if err := job.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid job spec: %w", err)
+	}
+	return &job, nil
+}
+
+// SaveJobSpec saves a job specification to a JSON file
+func SaveJobSpec(path string, job *JobSpec) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("failed to create job spec file: %w", err)
+	}
+	defer f.Close()
+
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(job); err != nil {
+		return fmt.Errorf("failed to write job spec: %w", err)
+	}
+	return nil
+}
+
+// JobResult holds the encrypted result of a job
+type JobResult struct {
+	JobID      string                 `json:"job_id"`
+	Operation  string                 `json:"operation"`
+	ResultPath string                 `json:"result_path"` // Path to encrypted result ciphertext
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// JobPlan represents a planned execution of a job
+type JobPlan struct {
+	Job   *JobSpec
+	Steps []PlanStep
+}
+
+// PlanStep represents one step in job execution
+type PlanStep struct {
+	Name        string
+	Description string
+	Inputs      []string
+	Outputs     []string
+}
+
+// PlanJob creates an execution plan for a job
+func PlanJob(job *JobSpec) (*JobPlan, error) {
+	if err := job.Validate(); err != nil {
+		return nil, err
+	}
+
+	plan := &JobPlan{Job: job}
+
+	switch job.Operation {
+	case OpMean:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load data blocks and validity vectors"},
+			{Name: "masked_sum", Description: "Compute sum(x * v)"},
+			{Name: "count", Description: "Compute sum(v)"},
+			{Name: "inverse", Description: "Compute 1/count via INVNTHSQRT"},
+			{Name: "divide", Description: "Compute mean = sum * invCount"},
+		}
+	case OpVariance:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load data blocks and validity vectors"},
+			{Name: "mean", Description: "Compute mean"},
+			{Name: "sum_squares", Description: "Compute sum(x^2 * v)"},
+			{Name: "inverse", Description: "Compute 1/count"},
+			{Name: "variance", Description: "Compute E[X^2] - E[X]^2"},
+		}
+	case OpStdev:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load data blocks and validity vectors"},
+			{Name: "variance", Description: "Compute variance"},
+			{Name: "sqrt", Description: "Compute sqrt(variance) via INVNTHSQRT"},
+		}
+	case OpCorr:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load data blocks for both columns"},
+			{Name: "means", Description: "Compute means of X and Y"},
+			{Name: "covariance", Description: "Compute covariance"},
+			{Name: "variances", Description: "Compute variances of X and Y"},
+			{Name: "normalize", Description: "Compute cov/(stdevX * stdevY)"},
+		}
+	case OpBc:
+		plan.Steps = []PlanStep{
+			{Name: "load_bmvs", Description: "Load BMV blocks for conditions"},
+			{Name: "build_mask", Description: "Multiply BMVs to create combined mask"},
+			{Name: "sum", Description: "Sum mask values to get count"},
+		}
+	case OpBa:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load target column and BMVs"},
+			{Name: "build_mask", Description: "Build combined mask from conditions"},
+			{Name: "mean", Description: "Compute mean with mask as validity"},
+		}
+	case OpBv:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load target column and BMVs"},
+			{Name: "build_mask", Description: "Build combined mask from conditions"},
+			{Name: "variance", Description: "Compute variance with mask as validity"},
+		}
+	case OpLBc:
+		plan.Steps = []PlanStep{
+			{Name: "load_pbmv", Description: "Load PBMV for primary variable"},
+			{Name: "load_bbmv", Description: "Load BBMVs for other variables"},
+			{Name: "multiply", Description: "Compute batched products"},
+			{Name: "pack", Description: "Pack results for DDIA post-processing"},
+		}
+	case OpPercentile:
+		plan.Steps = []PlanStep{
+			{Name: "load_bmvs", Description: "Load BMVs for ordinal column"},
+			{Name: "frequencies", Description: "Compute frequency for each value"},
+			{Name: "cumulative", Description: "Build cumulative histogram"},
+			{Name: "compare", Description: "Compare cumulative/R with k/100"},
+			{Name: "find", Description: "Find first bucket above threshold"},
+		}
+	case OpLookup:
+		plan.Steps = []PlanStep{
+			{Name: "load_data", Description: "Load categorical and target columns"},
+			{Name: "equality", Description: "Compute DISCRETEEQUALZERO(cat - value)"},
+			{Name: "select", Description: "Multiply equality indicator by target"},
+		}
+	}
+
+	return plan, nil
+}
+
+// Executor executes jobs on encrypted data
+type Executor struct {
+	// Future: add evaluator, storage, etc.
+}
+
+// NewExecutor creates a new job executor
+func NewExecutor() *Executor {
+	return &Executor{}
+}
+
+// BatchJob represents a batch of jobs to execute
+type BatchJob struct {
+	Jobs []*JobSpec `json:"jobs"`
+}
+
+// LoadBatchJob loads a batch job specification from a JSON file
+func LoadBatchJob(path string) (*BatchJob, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open batch job file: %w", err)
+	}
+	defer f.Close()
+
+	var batch BatchJob
+	decoder := json.NewDecoder(f)
+	if err := decoder.Decode(&batch); err != nil {
+		return nil, fmt.Errorf("failed to parse batch job: %w", err)
+	}
+
+	// Validate all jobs
+	for i, job := range batch.Jobs {
+		if err := job.Validate(); err != nil {
+			return nil, fmt.Errorf("job %d invalid: %w", i, err)
+		}
+	}
+
+	return &batch, nil
+}

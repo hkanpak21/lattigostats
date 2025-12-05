@@ -1,5 +1,4 @@
 package jobs
-package jobs
 
 import (
 	"bytes"
@@ -14,175 +13,227 @@ func TestJobSpecValidation(t *testing.T) {
 	}{
 		{
 			name: "valid mean",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	}		t.Error("Expected error for invalid spec")	if err == nil {	_, err = ParseJobSpec(bytes.NewReader([]byte(jsonData)))	jsonData := `{"id": "job", "operation": "mean"}`	// Valid JSON but invalid spec	}		t.Error("Expected error for invalid JSON")	if err == nil {	_, err := ParseJobSpec(bytes.NewReader([]byte("not json")))	// Invalid JSONfunc TestParseJobSpecInvalid(t *testing.T) {}	}		t.Errorf("Unexpected columns: %v", spec.Columns)	if len(spec.Columns) != 1 || spec.Columns[0] != "income" {	}		t.Errorf("Expected operation 'mean', got '%s'", spec.Operation)	if spec.Operation != OpMean {	}		t.Errorf("Expected ID 'test-job', got '%s'", spec.ID)	if spec.ID != "test-job" {	}		t.Fatalf("Failed to parse job spec: %v", err)	if err != nil {	spec, err := ParseJobSpec(bytes.NewReader([]byte(jsonData)))	}`		"description": "Compute mean income"		"columns": ["income"],		"operation": "mean",		"id": "test-job",	jsonData := `{func TestParseJobSpec(t *testing.T) {}	}		})			}				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)			if (err != nil) != tt.wantErr {			err := tt.spec.Validate()		t.Run(tt.name, func(t *testing.T) {	for _, tt := range tests {	}		},			wantErr: true,			},				Operation: "unknown",				ID:        "job",			spec: JobSpec{			name: "unknown operation",		{		},			wantErr: true,			},				K:         150,				Columns:   []string{"x"},				Operation: OpPercentile,				ID:        "job",			spec: JobSpec{			name: "percentile out of range",		{		},			wantErr: true,			},				},					{Column: "x", Value: 1},				Conditions: []CategoricalCondition{				Operation: OpBinAvg,				ID:        "job",			spec: JobSpec{			name: "bin average without target",		{		},			wantErr: true,			},				Operation: OpBinCount,				ID:        "job",			spec: JobSpec{			name: "bin count without conditions",		{		},			wantErr: true,			},				Columns:   []string{"a"},				Operation: OpCorr,				ID:        "job",			spec: JobSpec{			name: "corr with wrong column count",		{		},			wantErr: true,			},				Columns:   []string{"a", "b"},				Operation: OpMean,				ID:        "job",			spec: JobSpec{			name: "mean with wrong column count",		{		},			wantErr: true,			},				Columns:   []string{"income"},				Operation: OpMean,			spec: JobSpec{			name: "missing id",		{		},			wantErr: false,			},				K:         90,				Columns:   []string{"risk_bucket"},				Operation: OpPercentile,				ID:        "job6",			spec: JobSpec{			name: "valid percentile",		{		},			wantErr: false,			},				},					{Column: "gender", Value: 1},				Conditions: []CategoricalCondition{				Target:    "income",				Operation: OpBinAvg,				ID:        "job5",			spec: JobSpec{			name: "valid bin average",		{		},			wantErr: false,			},				},					{Column: "gender", Value: 1},				Conditions: []CategoricalCondition{				Operation: OpBinCount,				ID:        "job4",			spec: JobSpec{			name: "valid bin count",		{		},			wantErr: false,			},				Columns:   []string{"income", "spending"},				Operation: OpCorr,				ID:        "job3",			spec: JobSpec{			name: "valid correlation",		{		},			wantErr: false,			},				Columns:   []string{"income"},				Operation: OpVariance,				ID:        "job2",			spec: JobSpec{			name: "valid variance",		{		},			wantErr: false,			},				Columns:   []string{"income"},				Operation: OpMean,				ID:        "job1",			spec: JobSpec{
+			spec: JobSpec{
+				ID:           "job1",
+				Operation:    OpMean,
+				Table:        "table1",
+				InputColumns: []string{"income"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid variance",
+			spec: JobSpec{
+				ID:           "job2",
+				Operation:    OpVariance,
+				Table:        "table1",
+				InputColumns: []string{"age"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid correlation",
+			spec: JobSpec{
+				ID:           "job3",
+				Operation:    OpCorr,
+				Table:        "table1",
+				InputColumns: []string{"income", "age"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid bc",
+			spec: JobSpec{
+				ID:        "job4",
+				Operation: OpBc,
+				Table:     "table1",
+				Conditions: []Condition{
+					{Column: "gender", Value: 1},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid ba",
+			spec: JobSpec{
+				ID:           "job5",
+				Operation:    OpBa,
+				Table:        "table1",
+				TargetColumn: "income",
+				Conditions: []Condition{
+					{Column: "gender", Value: 1},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty id",
+			spec: JobSpec{
+				ID:           "",
+				Operation:    OpMean,
+				Table:        "table1",
+				InputColumns: []string{"income"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty table",
+			spec: JobSpec{
+				ID:           "job6",
+				Operation:    OpMean,
+				Table:        "",
+				InputColumns: []string{"income"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "mean without input columns",
+			spec: JobSpec{
+				ID:           "job7",
+				Operation:    OpMean,
+				Table:        "table1",
+				InputColumns: []string{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "correlation with one column",
+			spec: JobSpec{
+				ID:           "job8",
+				Operation:    OpCorr,
+				Table:        "table1",
+				InputColumns: []string{"income"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "bc without conditions",
+			spec: JobSpec{
+				ID:         "job9",
+				Operation:  OpBc,
+				Table:      "table1",
+				Conditions: []Condition{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "ba without target column",
+			spec: JobSpec{
+				ID:        "job10",
+				Operation: OpBa,
+				Table:     "table1",
+				Conditions: []Condition{
+					{Column: "gender", Value: 1},
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.spec.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("JobSpec.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestParseJobSpec(t *testing.T) {
+	jsonData := `{
+		"id": "test_job",
+		"operation": "mean",
+		"table": "table1",
+		"input_columns": ["income"]
+	}`
+
+	buf := bytes.NewBufferString(jsonData)
+	spec, err := ParseJobSpec(buf)
+	if err != nil {
+		t.Fatalf("Failed to parse job spec: %v", err)
+	}
+
+	if spec.ID != "test_job" {
+		t.Errorf("Expected ID 'test_job', got '%s'", spec.ID)
+	}
+	if spec.Operation != OpMean {
+		t.Errorf("Expected operation OpMean, got %s", spec.Operation)
+	}
+	if spec.Table != "table1" {
+		t.Errorf("Expected table 'table1', got '%s'", spec.Table)
+	}
+}
+
+func TestOperationTypes(t *testing.T) {
+	operations := []Operation{
+		OpMean,
+		OpVariance,
+		OpStdev,
+		OpCorr,
+		OpBc,
+		OpBa,
+		OpBv,
+		OpPercentile,
+	}
+
+	for _, op := range operations {
+		if op == "" {
+			t.Error("Operation type should not be empty")
+		}
+	}
+}
+
+func TestCondition(t *testing.T) {
+	cond := Condition{
+		Column: "gender",
+		Value:  1,
+	}
+
+	if cond.Column != "gender" {
+		t.Errorf("Expected column 'gender', got '%s'", cond.Column)
+	}
+	if cond.Value != 1 {
+		t.Errorf("Expected value 1, got %d", cond.Value)
+	}
+}
+
+func TestJobSpecPercentile(t *testing.T) {
+	spec := &JobSpec{
+		ID:           "percentile_job",
+		Operation:    OpPercentile,
+		Table:        "table1",
+		InputColumns: []string{"income"},
+		K:            50.0,
+	}
+
+	if err := spec.Validate(); err != nil {
+		t.Errorf("Valid percentile job failed validation: %v", err)
+	}
+
+	if spec.K != 50.0 {
+		t.Errorf("Expected K=50.0, got %f", spec.K)
+	}
+}
+
+func TestPlanJob(t *testing.T) {
+	spec := &JobSpec{
+		ID:           "test_mean",
+		Operation:    OpMean,
+		Table:        "table1",
+		InputColumns: []string{"income"},
+	}
+
+	plan, err := PlanJob(spec)
+	if err != nil {
+		t.Fatalf("Failed to plan job: %v", err)
+	}
+
+	if plan.Job.ID != spec.ID {
+		t.Errorf("Expected job ID %s, got %s", spec.ID, plan.Job.ID)
+	}
+
+	if len(plan.Steps) == 0 {
+		t.Error("Expected non-empty plan steps")
+	}
+}

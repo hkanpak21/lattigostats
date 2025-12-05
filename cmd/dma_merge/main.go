@@ -1,124 +1,255 @@
-package dmamerge
-// Command dma_merge provides encrypted table merging for DMA.
+// DMA Merge - Data Merge Authority Tool
+// This tool merges encrypted tables from multiple data owners by protected identifiers.
 package main
 
 import (
 	"crypto/hmac"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return hex.EncodeToString(h.Sum(nil))	h.Write([]byte(rawID))	h := hmac.New(sha256.New, key)func computeToken(key []byte, rawID string) string {// computeToken generates a protected identifier token}	fmt.Println("\nMerge complete (demo mode)")	_ = storage.BlocksDir // Use import	// _, err = storage.NewTableStorage(*outputDir, metadata, profile.Params)	// In full implementation:	fmt.Printf("Using profile %s with %d slots\n", profile.Type, profile.Slots)	fmt.Printf("\nMerged table would have schema: %s\n", mergedSchema.Name)	}		Columns:     []schema.Column{},		Description: "Merged from multiple data owners",		Name:        "merged_table",	mergedSchema := schema.TableSchema{	// Create a dummy merged metadata	}		fmt.Printf("  Protected token: %s\n", token)		fmt.Printf("  Raw ID: %s\n", rawID)		fmt.Printf("\nIdentifier protection demo:\n")		token := computeToken(macKey, rawID)		rawID := "user123"		// Demo: compute protected identifier		}			log.Fatalf("Failed to read MAC key: %v", err)		if err != nil {		macKey, err := os.ReadFile(*macKeyFile)	if *macKeyFile != "" {	// If MAC key is provided, show how identifier protection works	}		log.Fatalf("Failed to create output directory: %v", err)	if err := os.MkdirAll(*outputDir, 0755); err != nil {	// Create output directory	fmt.Println("6. Writing merged output")	fmt.Println("5. Merging ciphertext blocks")	fmt.Println("4. Joining rows by token equality")	fmt.Println("3. Computing protected identifiers using MAC key")	fmt.Println("2. Verifying schema compatibility")	fmt.Println("1. Loading metadata from each input table")	fmt.Println("\nMerge process:")	// 5. Output merged encrypted table	// 4. Merge ciphertext blocks, aligning by row tokens	// 3. Join by protected identifiers (HMAC tokens)	// 2. Verify schemas are compatible	// 1. Load each encrypted table's metadata	// In a real implementation, we would:	// For demo: show what would happen	}		log.Fatalf("Failed to create profile: %v", err)	if err != nil {	}		log.Fatalf("Unknown profile: %s", paramsMeta.Profile)	default:		profile, err = params.NewProfileB()	case "B":		profile, err = params.NewProfileA()	case "A":	switch paramsMeta.Profile {	var profile *params.Profile	}		log.Fatalf("Failed to parse params: %v", err)	if err := json.Unmarshal(paramsData, &paramsMeta); err != nil {	}		Profile string `json:"profile"`	var paramsMeta struct {	}		log.Fatalf("Failed to read params: %v", err)	if err != nil {	paramsData, err := os.ReadFile(paramsPath)	paramsPath := filepath.Join(*keyDir, "params.json")	// Load params	fmt.Printf("Output directory: %s\n", *outputDir)	fmt.Printf("Input directories: %s\n", *inputDirs)	fmt.Println("DMA Merge Tool")	}		os.Exit(1)		fs.PrintDefaults()		fmt.Fprintln(os.Stderr, "Error: -inputs is required")	if *inputDirs == "" {	fs.Parse(os.Args[1:])	keyDir := fs.String("keys", "./keys", "Directory containing params")	macKeyFile := fs.String("mac-key", "", "MAC key file for identifier protection")	outputDir := fs.String("output", "./merged", "Output directory for merged table")	inputDirs := fs.String("inputs", "", "Comma-separated list of input encrypted table directories")	fs := flag.NewFlagSet("dma_merge", flag.ExitOnError)func main() {)	"github.com/hkanpak21/lattigostats/pkg/storage"	"github.com/hkanpak21/lattigostats/pkg/schema"	"github.com/hkanpak21/lattigostats/pkg/params"	"path/filepath"	"os"	"log"	"fmt"	"flag"	"encoding/json"	"encoding/hex"	"crypto/sha256"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/hkanpak21/lattigostats/pkg/schema"
+	"github.com/hkanpak21/lattigostats/pkg/storage"
+)
+
+func main() {
+	inputsFlag := flag.String("inputs", "", "Comma-separated list of encrypted table directories")
+	outputDir := flag.String("output", "./merged", "Output directory for merged table")
+	macKeyPath := flag.String("mac-key", "", "Path to MAC key file (for token verification)")
+	flag.Parse()
+
+	if *inputsFlag == "" {
+		fmt.Fprintln(os.Stderr, "Usage: dma_merge -inputs <dir1,dir2,...> -output <dir>")
+		os.Exit(1)
+	}
+
+	// Parse input directories
+	inputs := filepath.SplitList(*inputsFlag)
+	if len(inputs) == 0 {
+		// Try comma-separated
+		inputs = splitComma(*inputsFlag)
+	}
+
+	if len(inputs) < 1 {
+		fmt.Fprintln(os.Stderr, "At least one input directory required")
+		os.Exit(1)
+	}
+
+	fmt.Printf("Merging %d tables...\n", len(inputs))
+
+	// Load metadata from all inputs
+	var allMeta []*schema.TableMetadata
+	var allStores []*storage.TableStore
+
+	for i, inputPath := range inputs {
+		store, err := storage.OpenTableStore(inputPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to open table %d (%s): %v\n", i, inputPath, err)
+			os.Exit(1)
+		}
+		allStores = append(allStores, store)
+
+		metaPath := filepath.Join(inputPath, "metadata.json")
+		meta, err := schema.LoadMetadataFromFile(metaPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load metadata for table %d: %v\n", i, err)
+			os.Exit(1)
+		}
+		allMeta = append(allMeta, meta)
+
+		fmt.Printf("  Table %d: %s (%d rows, %d columns)\n",
+			i, meta.Schema.Name, meta.RowCount, len(meta.Schema.Columns))
+	}
+
+	// Verify parameters match
+	if len(allMeta) > 1 {
+		ref := allMeta[0]
+		for i := 1; i < len(allMeta); i++ {
+			if allMeta[i].ParamsHash != ref.ParamsHash {
+				fmt.Fprintf(os.Stderr, "Parameter mismatch between table 0 and %d\n", i)
+				os.Exit(1)
+			}
+			if allMeta[i].Slots != ref.Slots {
+				fmt.Fprintf(os.Stderr, "Slots mismatch between table 0 and %d\n", i)
+				os.Exit(1)
+			}
+		}
+	}
+
+	// Create output
+	mergedStore, err := storage.NewTableStore(*outputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create output: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Simple merge: concatenate all columns from all tables
+	// In a real implementation, this would join by protected identifiers
+	mergedSchema := schema.TableSchema{
+		Name:        "merged",
+		Description: "Merged table from multiple data owners",
+		Columns:     []schema.Column{},
+	}
+
+	// Track column sources
+	type columnSource struct {
+		storeIdx int
+		colName  string
+	}
+	colSources := make(map[string]columnSource)
+
+	for i, meta := range allMeta {
+		for _, col := range meta.Schema.Columns {
+			uniqueName := fmt.Sprintf("%s_%s", meta.DataOwnerID, col.Name)
+			mergedSchema.Columns = append(mergedSchema.Columns, schema.Column{
+				Name:          uniqueName,
+				Type:          col.Type,
+				CategoryCount: col.CategoryCount,
+				MinValue:      col.MinValue,
+				MaxValue:      col.MaxValue,
+				Description:   fmt.Sprintf("From %s: %s", meta.DataOwnerID, col.Description),
+			})
+			colSources[uniqueName] = columnSource{storeIdx: i, colName: col.Name}
+		}
+	}
+
+	// For now, assume all tables have same row count (simplified merge)
+	// Real implementation would match by protected identifiers
+	rowCount := allMeta[0].RowCount
+	slots := allMeta[0].Slots
+	_ = allMeta[0].BlockCount // used for verification
+
+	fmt.Printf("\nMerging into table with %d columns, %d rows\n", len(mergedSchema.Columns), rowCount)
+
+	// Copy blocks
+	for newColName, src := range colSources {
+		fmt.Printf("  Copying column: %s\n", newColName)
+		srcStore := allStores[src.storeIdx]
+		srcMeta := allMeta[src.storeIdx]
+
+		for b := 0; b < srcMeta.BlockCount; b++ {
+			// Copy data block
+			ct, err := srcStore.LoadBlock(src.colName, b)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to load block: %v\n", err)
+				os.Exit(1)
+			}
+			if err := mergedStore.SaveBlock(newColName, b, ct); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save block: %v\n", err)
+				os.Exit(1)
+			}
+
+			// Copy validity
+			ctVal, err := srcStore.LoadValidity(src.colName, b)
+			if err != nil {
+				// Validity might not exist, skip
+				continue
+			}
+			if err := mergedStore.SaveValidity(newColName, b, ctVal); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save validity: %v\n", err)
+				os.Exit(1)
+			}
+		}
+
+		// Copy BMVs for categorical columns
+		srcCol := allMeta[src.storeIdx].Schema.GetColumn(src.colName)
+		if srcCol != nil && (srcCol.Type == schema.Categorical || srcCol.Type == schema.Ordinal) {
+			for v := 1; v <= srcCol.CategoryCount; v++ {
+				for b := 0; b < srcMeta.BlockCount; b++ {
+					ct, err := srcStore.LoadBMV(src.colName, v, b)
+					if err != nil {
+						continue
+					}
+					if err := mergedStore.SaveBMV(newColName, v, b, ct); err != nil {
+						fmt.Fprintf(os.Stderr, "Failed to save BMV: %v\n", err)
+						os.Exit(1)
+					}
+				}
+			}
+		}
+	}
+
+	// Save merged metadata
+	mergedMeta, err := schema.NewTableMetadata(
+		mergedSchema,
+		rowCount,
+		slots,
+		allMeta[0].ParamsHash,
+		allMeta[0].LogScale,
+		"merged",
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create metadata: %v\n", err)
+		os.Exit(1)
+	}
+
+	metaPath := filepath.Join(*outputDir, "metadata.json")
+	if err := mergedMeta.SaveToFile(metaPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save metadata: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Load MAC key if provided (for future identifier matching)
+	if *macKeyPath != "" {
+		keyData, err := os.ReadFile(*macKeyPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: could not load MAC key: %v\n", err)
+		} else {
+			// Example of how tokens would be generated
+			_ = keyData
+			fmt.Println("MAC key loaded for identifier protection")
+		}
+	}
+
+	fmt.Printf("\nMerge complete! Output: %s\n", *outputDir)
+}
+
+func splitComma(s string) []string {
+	var result []string
+	current := ""
+	for _, c := range s {
+		if c == ',' {
+			if current != "" {
+				result = append(result, current)
+				current = ""
+			}
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		result = append(result, current)
+	}
+	return result
+}
+
+// ComputeToken computes a protected identifier token
+func ComputeToken(macKey []byte, identifier string) string {
+	mac := hmac.New(sha256.New, macKey)
+	mac.Write([]byte(identifier))
+	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// MergeConfig holds configuration for the merge operation
+type MergeConfig struct {
+	MatchColumn string `json:"match_column"`
+	Strategy    string `json:"strategy"` // "inner", "left", "outer"
+}
+
+// LoadMergeConfig loads merge configuration from a JSON file
+func LoadMergeConfig(path string) (*MergeConfig, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var config MergeConfig
+	if err := json.NewDecoder(f).Decode(&config); err != nil {
+		return nil, err
+	}
+	return &config, nil
+}

@@ -1,482 +1,409 @@
-package categorical
 // Package categorical implements categorical statistical operations:
-// BMV generation, BIN-OP (Bc/Ba/Bv), and LBc with PBMV/BBMV.
+// BMV (Bin Mask Vectors), Bc (bin-count), Ba (bin-average), Bv (bin-variance),
+// and LBc (Large-Bin-Count) using PBMV/BBMV encodings.
 package categorical
 
 import (
 	"fmt"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return ct.Counts[flatIdx], nil	}		multiplier *= ct.Dimensions[i]		flatIdx += indices[i] * multiplier		}			return 0, fmt.Errorf("index %d out of bounds for dimension %d", indices[i], i)		if indices[i] < 0 || indices[i] >= ct.Dimensions[i] {	for i := len(indices) - 1; i >= 0; i-- {	multiplier := 1	flatIdx := 0	}		return 0, fmt.Errorf("index dimension mismatch")	if len(indices) != len(ct.Dimensions) {func (ct *ContingencyTable) GetCount(indices []int) (int64, error) {// GetCount gets the count at a given multi-dimensional index}	return nil	ct.Counts[flatIdx] = count	}		multiplier *= ct.Dimensions[i]		flatIdx += indices[i] * multiplier		}			return fmt.Errorf("index %d out of bounds for dimension %d", indices[i], i)		if indices[i] < 0 || indices[i] >= ct.Dimensions[i] {	for i := len(indices) - 1; i >= 0; i-- {	multiplier := 1	flatIdx := 0	}		return fmt.Errorf("index dimension mismatch")	if len(indices) != len(ct.Dimensions) {func (ct *ContingencyTable) SetCount(indices []int, count int64) error {// SetCount sets the count at a given multi-dimensional index}	}		Counts:     make([]int64, total),		Dimensions: dimensions,	return &ContingencyTable{	}		total *= d	for _, d := range dimensions {	total := 1func NewContingencyTable(dimensions []int) *ContingencyTable {// NewContingencyTable creates a new contingency table}	Counts     []int64 // Flattened counts	Dimensions []int   // Size of each dimensiontype ContingencyTable struct {// Used by DDIA for post-processing LBc results// ContingencyTable represents a multi-dimensional contingency table}	return result	}		result *= base	for i := 0; i < int(exp); i++ {	result := 1.0func pow(base, exp float64) float64 {// Helper function for power}	}, nil		Config:            LBcConfig{Delta: pbmvBlocks[0].Delta},		NumCategories:     numCategories,		PackedCiphertexts: []*rlwe.Ciphertext{totalSum},	return &LBcResult{	// Note: BBMV doesn't directly store category count; caller must track this	numCategories := []int{pbmvBlocks[0].NumCategories}	// Collect category counts	}		}			}				return nil, fmt.Errorf("failed to add block %d: %w", blockIdx, err)			if err := c.eval.AddInPlace(totalSum, blockSum); err != nil {		} else {			totalSum = blockSum		if totalSum == nil {		}			return nil, fmt.Errorf("failed to sum slots in block %d: %w", blockIdx, err)		if err != nil {		blockSum, err := c.eval.SumSlots(block, c.slots)	for blockIdx, block := range resultBlocks {	var totalSum *rlwe.Ciphertext	// Sum across all blocks	}		resultBlocks[blockIdx] = result		}			}				return nil, fmt.Errorf("failed to multiply BBMV in block %d: %w", blockIdx, err)			if err != nil {			result, err = c.eval.Mul(result, bbmvSet[blockIdx].Ciphertext)			var err error		for _, bbmvSet := range bbmvBlockSets {		result := pbmvBlocks[blockIdx].Ciphertext.CopyNew()	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {	resultBlocks := make([]*rlwe.Ciphertext, numBlocks)	// Multiply PBMV by all BBMVs for each block	}		}			return nil, fmt.Errorf("BBMV set %d has %d blocks, expected %d", i, len(bbmvSet), numBlocks)		if len(bbmvSet) != numBlocks {	for i, bbmvSet := range bbmvBlockSets {	// Verify all BBMV sets have matching block counts	numBlocks := len(pbmvBlocks)	}		return nil, fmt.Errorf("no PBMV blocks provided")	if len(pbmvBlocks) == 0 {) (*LBcResult, error) {	bbmvBlockSets [][]*BBMVBlock, // One set per additional categorical variable	pbmvBlocks []*PBMVBlock,func (c *CategoricalOps) LargeBinCount(// Returns packed ciphertexts that DDIA will decrypt and post-process// LargeBinCount computes contingency table counts using PBMV/BBMV encoding}	Config            LBcConfig	NumCategories     []int // Categories per variable	PackedCiphertexts []*rlwe.Ciphertexttype LBcResult struct {// This is decrypted and post-processed by DDIA// LBcResult holds the result of a Large-Bin-Count operation}	return bbmvBlocks, nil	}		}			Lambda:     config.Lambda,			Ciphertext: ct,		bbmvBlocks[blockIdx] = &BBMVBlock{		}			return nil, fmt.Errorf("failed to encrypt BBMV block %d: %w", blockIdx, err)		if err != nil {		ct, err := encryptor.Encrypt(pt)		}			return nil, fmt.Errorf("failed to encode BBMV block %d: %w", blockIdx, err)		if err != nil {		pt, err := c.encoder.EncodeFloat64(values, level)		}			}				values[i] = scale			if blockValidity[i] > 0.5 && blockData[i] == targetCategory {		for i := 0; i < len(blockData) && i < c.slots; i++ {		values := make([]float64, c.slots)		blockValidity := validityData[blockIdx]		blockData := categoryData[blockIdx]	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {	scale := float64(int(1) << config.Lambda) // 2^Λ	bbmvBlocks := make([]*BBMVBlock, numBlocks)	numBlocks := len(categoryData)) ([]*BBMVBlock, error) {	level int,	encryptor *he.Encryptor,	config LBcConfig,	targetCategory int,	validityData [][]float64,	categoryData [][]int,func (c *CategoricalOps) GenerateBBMV(// Encodes category match as {0, 2^Λ}// GenerateBBMV creates a Big Bin Mask Vector for subsequent categorical variables}	return pbmvBlocks, nil	}		}			Delta:         config.Delta,			NumCategories: numCategories,			Ciphertext:    ct,		pbmvBlocks[blockIdx] = &PBMVBlock{		}			return nil, fmt.Errorf("failed to encrypt PBMV block %d: %w", blockIdx, err)		if err != nil {		ct, err := encryptor.Encrypt(pt)		}			return nil, fmt.Errorf("failed to encode PBMV block %d: %w", blockIdx, err)		if err != nil {		pt, err := c.encoder.EncodeFloat64(values, level)		}			}				}					values[i] = pow(delta, float64(cat-1))					// Position = Δ * (cat - 1), value = 2^position				if cat >= 1 && cat <= numCategories {				cat := blockData[i]			if blockValidity[i] > 0.5 {		for i := 0; i < len(blockData) && i < c.slots; i++ {		values := make([]float64, c.slots)		// Encode: for each slot, encode 2^(Δ * (category - 1)) if valid		blockValidity := validityData[blockIdx]		blockData := categoryData[blockIdx]	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {	delta := float64(int(1) << config.Delta) // 2^Δ	pbmvBlocks := make([]*PBMVBlock, numBlocks)	numBlocks := len(categoryData)) ([]*PBMVBlock, error) {	level int,	encryptor *he.Encryptor,	config LBcConfig,	numCategories int,	validityData [][]float64,	categoryData [][]int,func (c *CategoricalOps) GeneratePBMV(// Each row encodes its category value as a one-hot in bit-fields spaced by Delta// GeneratePBMV creates a Packed Bin Mask Vector for the first categorical variable}	Lambda     int	Ciphertext *rlwe.Ciphertexttype BBMVBlock struct {// Used for subsequent categorical variables in LBc// BBMVBlock represents a Big Bin Mask Vector block}	Delta      int	NumCategories int	Ciphertext *rlwe.Ciphertexttype PBMVBlock struct {// Used for the first categorical variable in LBc// PBMVBlock represents a Packed Bin Mask Vector block}	}		Lambda: 20, // 2^20 scale for BBMV		Delta:  8,  // 2^8 = 256 spacing	return LBcConfig{func DefaultLBcConfig() LBcConfig {// DefaultLBcConfig returns default LBc configuration}	Lambda int // Λ: bit separation for BBMV (log2 of the encoding scale)	Delta  int // Δ: spacing between category encodings in PBMVtype LBcConfig struct {// LBcConfig holds configuration for Large-Bin-Count operation}	return combinedMask, nil	}		combinedMask[blockIdx] = mask		}			}				return nil, fmt.Errorf("failed to multiply mask in block %d: %w", blockIdx, err)			if err != nil {			mask, err = c.eval.Mul(mask, bmv[blockIdx])			var err error			}				return nil, fmt.Errorf("BMV block %d not found for column %s value %d", blockIdx, cond.ColumnName, cond.Value)			if bmv == nil || blockIdx >= len(bmv) {			bmv := bmvSet[cond.Value]			}				return nil, fmt.Errorf("BMV set not found for column %s", cond.ColumnName)			if !ok {			bmvSet, ok := bmvSets[cond.ColumnName]		for _, cond := range conditions {		// Multiply by each condition's BMV		mask := validityBlocks[blockIdx].CopyNew()		// Start with validity	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {	combinedMask := make([]*rlwe.Ciphertext, numBlocks)	numBlocks := len(validityBlocks)) ([]*rlwe.Ciphertext, error) {	conditions []Condition,	bmvSets map[string]BMVSet,	validityBlocks []*rlwe.Ciphertext,func (c *CategoricalOps) buildCombinedMask(// buildCombinedMask creates a mask that is 1 only where all conditions are met}	return c.numericOps.Variance(targetBlocks, combinedMask)	// Use NumericOps.Variance with the combined mask	}		return nil, fmt.Errorf("failed to build combined mask: %w", err)	if err != nil {	combinedMask, err := c.buildCombinedMask(validityBlocks, bmvSets, conditions)	// Build combined mask) (*rlwe.Ciphertext, error) {	conditions []Condition,	bmvSets map[string]BMVSet,	validityBlocks []*rlwe.Ciphertext,	targetBlocks []*rlwe.Ciphertext,func (c *CategoricalOps) BinVariance(// BinVariance (Bv) computes the variance of a numeric column for rows matching conditions}	return c.numericOps.Mean(targetBlocks, combinedMask)	// Use NumericOps.Mean with the combined mask as validity	}		return nil, fmt.Errorf("failed to build combined mask: %w", err)	if err != nil {	combinedMask, err := c.buildCombinedMask(validityBlocks, bmvSets, conditions)	// Build combined mask: validity * all BMV conditions) (*rlwe.Ciphertext, error) {	conditions []Condition,	bmvSets map[string]BMVSet,	validityBlocks []*rlwe.Ciphertext,	targetBlocks []*rlwe.Ciphertext,func (c *CategoricalOps) BinAverage(// targetBlocks: encrypted blocks of the numeric target column// BinAverage (Ba) computes the average of a numeric column for rows matching conditions}	return c.numericOps.CountSum(maskBlocks)	// Count: sum of mask values	}		maskBlocks[blockIdx] = mask		}			}				}					return nil, fmt.Errorf("failed to multiply BMV masks in block %d: %w", blockIdx, err)				if err != nil {				mask, err = c.eval.Mul(mask, bmv[blockIdx])				var err error			} else {				mask = bmv[blockIdx].CopyNew()			if mask == nil {			}				return nil, fmt.Errorf("BMV block %d not found for column %s value %d", blockIdx, cond.ColumnName, cond.Value)			if bmv == nil || blockIdx >= len(bmv) {			bmv := bmvSet[cond.Value]			}				return nil, fmt.Errorf("BMV set not found for column %s", cond.ColumnName)			if !ok {			bmvSet, ok := bmvSets[cond.ColumnName]		for _, cond := range conditions {		var mask *rlwe.Ciphertext		// Start with all 1s (or first condition's BMV)	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {	maskBlocks := make([]*rlwe.Ciphertext, numBlocks)	// Build mask for each block by multiplying BMVs for all conditions	numBlocks := len(validityBlocks)	}		return c.numericOps.CountSum(validityBlocks)		// No conditions: just count valid rows	if len(conditions) == 0 {) (*rlwe.Ciphertext, error) {	conditions []Condition,	bmvSets map[string]BMVSet, // columnName -> BMVSet	validityBlocks []*rlwe.Ciphertext,func (c *CategoricalOps) BinCount(// Returns a ciphertext where all slots contain the count// BinCount (Bc) computes the count of rows matching all conditions}	Value      int	ColumnName stringtype Condition struct {// Condition represents a categorical filter condition (column = value)}	return bmvSet, nil	}		}			bmvSet[cat][blockIdx] = ct			}				return nil, fmt.Errorf("failed to encrypt BMV for category %d block %d: %w", cat, blockIdx, err)			if err != nil {			ct, err := encryptor.Encrypt(pt)			}				return nil, fmt.Errorf("failed to encode BMV for category %d block %d: %w", cat, blockIdx, err)			if err != nil {			pt, err := c.encoder.EncodeFloat64(maskValues, level)			// Encode and encrypt			}				}					maskValues[i] = 0.0				} else {					maskValues[i] = 1.0				if blockValidity[i] > 0.5 && blockData[i] == cat {			for i := 0; i < len(blockData) && i < c.slots; i++ {			maskValues := make([]float64, c.slots)		for cat := 1; cat <= numCategories; cat++ {		// For each category, create the mask vector		blockValidity := validityData[blockIdx]		blockData := categoryData[blockIdx]	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {	// Process each block	}		bmvSet[cat] = make([]*rlwe.Ciphertext, numBlocks)	for cat := 1; cat <= numCategories; cat++ {	// Initialize slices for each category	bmvSet := make(BMVSet)	}		return nil, fmt.Errorf("no data blocks provided")	if numBlocks == 0 {	numBlocks := len(categoryData)) (BMVSet, error) {	level int,	encryptor *he.Encryptor,	numCategories int,	validityData [][]float64,	categoryData [][]int,func (c *CategoricalOps) GenerateBMV(// validityData: for each block, a slice of validity flags (0 or 1)// categoryData: for each block, a slice of category values (1-indexed)// GenerateBMV creates BMV ciphertexts from plaintext categorical datatype BMVSet map[int][]*rlwe.Ciphertext// bmv[categoryValue][blockIndex] -> ciphertext with 1 where row has that category// BMVSet represents a set of Bin Mask Vectors for a categorical variable}	}		slots:      slots,		numericOps: numeric.NewNumericOps(eval, encoder, slots),		encoder:    encoder,		eval:       eval,	return &CategoricalOps{func NewCategoricalOps(eval *he.Evaluator, encoder *he.Encoder, slots int) *CategoricalOps {// NewCategoricalOps creates a new CategoricalOps instance}	slots      int	numericOps *numeric.NumericOps	encoder    *he.Encoder	eval       *he.Evaluatortype CategoricalOps struct {// CategoricalOps provides categorical statistical operations on encrypted data)	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"	"github.com/hkanpak21/lattigostats/pkg/he"	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+	"github.com/hkanpak21/lattigostats/pkg/he"
+	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+)
+
+// CategoricalOp computes categorical statistics on encrypted data
+type CategoricalOp struct {
+	eval      *he.Evaluator
+	numericOp *numeric.NumericOp
+}
+
+// NewCategoricalOp creates a new categorical operations handler
+func NewCategoricalOp(eval *he.Evaluator) *CategoricalOp {
+	return &CategoricalOp{
+		eval:      eval,
+		numericOp: numeric.NewNumericOp(eval),
+	}
+}
+
+// Condition represents a categorical filter condition (column = value)
+type Condition struct {
+	ColumnName string
+	Value      int
+}
+
+// BMVStore provides access to BMV ciphertexts
+type BMVStore interface {
+	// GetBMV returns the BMV block for the given column, value, and block index
+	GetBMV(columnName string, value int, blockIndex int) (*rlwe.Ciphertext, error)
+	// BlockCount returns the number of blocks
+	BlockCount() int
+}
+
+// BuildMask builds a combined mask from multiple conditions
+// mask[b] = v_target[b] * bmv[f0][w0][b] * bmv[f1][w1][b] * ...
+func (c *CategoricalOp) BuildMask(
+	validityBlocks []*rlwe.Ciphertext,
+	conditions []Condition,
+	bmvStore BMVStore,
+) ([]*rlwe.Ciphertext, error) {
+	blockCount := len(validityBlocks)
+	masks := make([]*rlwe.Ciphertext, blockCount)
+
+	for b := 0; b < blockCount; b++ {
+		// Start with validity mask
+		mask := validityBlocks[b].CopyNew()
+
+		// Multiply by each condition's BMV
+		for _, cond := range conditions {
+			bmv, err := bmvStore.GetBMV(cond.ColumnName, cond.Value, b)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get BMV for %s=%d block %d: %w",
+					cond.ColumnName, cond.Value, b, err)
+			}
+
+			mask, err = c.eval.Mul(mask, bmv)
+			if err != nil {
+				return nil, fmt.Errorf("block %d mul failed: %w", b, err)
+			}
+			mask, err = c.eval.Rescale(mask)
+			if err != nil {
+				return nil, fmt.Errorf("block %d rescale failed: %w", b, err)
+			}
+		}
+
+		masks[b] = mask
+	}
+
+	return masks, nil
+}
+
+// Bc computes bin-count: count of rows matching all conditions
+func (c *CategoricalOp) Bc(
+	validityBlocks []*rlwe.Ciphertext,
+	conditions []Condition,
+	bmvStore BMVStore,
+) (*rlwe.Ciphertext, error) {
+	// Build mask
+	masks, err := c.BuildMask(validityBlocks, conditions, bmvStore)
+	if err != nil {
+		return nil, fmt.Errorf("build mask failed: %w", err)
+	}
+
+	// Sum all mask values = count
+	return c.numericOp.Count(masks)
+}
+
+// Ba computes bin-average: average of target column for rows matching conditions
+func (c *CategoricalOp) Ba(
+	targetBlocks []*rlwe.Ciphertext,
+	validityBlocks []*rlwe.Ciphertext,
+	conditions []Condition,
+	bmvStore BMVStore,
+) (*rlwe.Ciphertext, error) {
+	// Build mask
+	masks, err := c.BuildMask(validityBlocks, conditions, bmvStore)
+	if err != nil {
+		return nil, fmt.Errorf("build mask failed: %w", err)
+	}
+
+	// Compute mean with the combined mask
+	return c.numericOp.Mean(targetBlocks, masks)
+}
+
+// Bv computes bin-variance: variance of target column for rows matching conditions
+func (c *CategoricalOp) Bv(
+	targetBlocks []*rlwe.Ciphertext,
+	validityBlocks []*rlwe.Ciphertext,
+	conditions []Condition,
+	bmvStore BMVStore,
+) (*rlwe.Ciphertext, error) {
+	// Build mask
+	masks, err := c.BuildMask(validityBlocks, conditions, bmvStore)
+	if err != nil {
+		return nil, fmt.Errorf("build mask failed: %w", err)
+	}
+
+	// Compute variance with the combined mask
+	return c.numericOp.Variance(targetBlocks, masks)
+}
+
+// LBcConfig configures Large-Bin-Count computation
+type LBcConfig struct {
+	Delta     int // Δ: bit spacing in PBMV
+	LambdaBig int // Λ: scale factor for BBMV (2^Λ)
+}
+
+// DefaultLBcConfig returns default LBc configuration
+func DefaultLBcConfig() LBcConfig {
+	return LBcConfig{
+		Delta:     8,
+		LambdaBig: 10,
+	}
+}
+
+// PBMVEncoder encodes categorical values using spaced bit-field encoding
+type PBMVEncoder struct {
+	config     LBcConfig
+	categories int // S_f: number of categories
+	slots      int
+}
+
+// NewPBMVEncoder creates a new PBMV encoder
+func NewPBMVEncoder(categories, slots int, config LBcConfig) *PBMVEncoder {
+	return &PBMVEncoder{
+		config:     config,
+		categories: categories,
+		slots:      slots,
+	}
+}
+
+// EncodePBMV encodes a single categorical value into PBMV format
+// Places 1 in position (value-1)*2^Δ and 0 elsewhere
+func (p *PBMVEncoder) EncodePBMV(values []int) []float64 {
+	result := make([]float64, p.slots)
+	spacing := 1 << p.config.Delta
+
+	for i, v := range values {
+		if i >= p.slots {
+			break
+		}
+		if v >= 1 && v <= p.categories {
+			// Each category gets a bit position spaced by 2^Δ
+			// This is a simplified version - actual impl needs packed format
+			pos := (v - 1) * spacing
+			if pos < p.slots {
+				result[i] = float64(v)
+			}
+		}
+	}
+
+	return result
+}
+
+// BBMVEncoder encodes binary masks with scaling
+type BBMVEncoder struct {
+	config LBcConfig
+	slots  int
+}
+
+// NewBBMVEncoder creates a new BBMV encoder
+func NewBBMVEncoder(slots int, config LBcConfig) *BBMVEncoder {
+	return &BBMVEncoder{
+		config: config,
+		slots:  slots,
+	}
+}
+
+// EncodeBBMV encodes a binary mask with 2^Λ scaling
+// Mask values: 0 or 2^Λ
+func (b *BBMVEncoder) EncodeBBMV(mask []bool) []float64 {
+	result := make([]float64, b.slots)
+	scale := float64(int(1) << b.config.LambdaBig)
+
+	for i, m := range mask {
+		if i >= b.slots {
+			break
+		}
+		if m {
+			result[i] = scale
+		}
+	}
+
+	return result
+}
+
+// LBcComputer computes Large-Bin-Count using PBMV/BBMV
+type LBcComputer struct {
+	eval   *he.Evaluator
+	config LBcConfig
+}
+
+// NewLBcComputer creates a new LBc computer
+func NewLBcComputer(eval *he.Evaluator, config LBcConfig) *LBcComputer {
+	return &LBcComputer{
+		eval:   eval,
+		config: config,
+	}
+}
+
+// PBMVStore provides access to PBMV ciphertexts
+type PBMVStore interface {
+	GetPBMV(columnName string, blockIndex int) (*rlwe.Ciphertext, error)
+	BlockCount() int
+}
+
+// BBMVStore provides access to BBMV ciphertexts
+type BBMVStore interface {
+	GetBBMV(columnName string, blockIndex int) (*rlwe.Ciphertext, error)
+	BlockCount() int
+}
+
+// LBcResult holds the encrypted result of LBc computation
+// DDIA must decrypt and post-process to get final contingency table
+type LBcResult struct {
+	// PackedResults contains the encrypted batched products
+	PackedResults []*rlwe.Ciphertext
+	// NumBlocks is the number of blocks
+	NumBlocks int
+	// RowsPerBlock is R per block
+	RowsPerBlock int
+	// RequiresAggregation is true if R > Slots * 2^Δ
+	RequiresAggregation bool
+}
+
+// ComputeLBc computes Large-Bin-Count for a multi-way contingency table
+// f0: primary variable (encoded as PBMV)
+// others: additional variables (encoded as BBMV)
+func (l *LBcComputer) ComputeLBc(
+	f0Column string,
+	pbmvStore PBMVStore,
+	otherColumns []string,
+	bbmvStores map[string]BBMVStore,
+	validityBlocks []*rlwe.Ciphertext,
+) (*LBcResult, error) {
+	blockCount := pbmvStore.BlockCount()
+	results := make([]*rlwe.Ciphertext, blockCount)
+
+	for b := 0; b < blockCount; b++ {
+		// Get PBMV for primary variable
+		pbmv, err := pbmvStore.GetPBMV(f0Column, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get PBMV for %s block %d: %w", f0Column, b, err)
+		}
+
+		// Start with PBMV
+		result := pbmv.CopyNew()
+
+		// Multiply by validity
+		result, err = l.eval.Mul(result, validityBlocks[b])
+		if err != nil {
+			return nil, fmt.Errorf("block %d validity mul failed: %w", b, err)
+		}
+		result, err = l.eval.Rescale(result)
+		if err != nil {
+			return nil, fmt.Errorf("block %d validity rescale failed: %w", b, err)
+		}
+
+		// Multiply by each BBMV
+		for _, col := range otherColumns {
+			store, ok := bbmvStores[col]
+			if !ok {
+				return nil, fmt.Errorf("no BBMV store for column %s", col)
+			}
+			bbmv, err := store.GetBBMV(col, b)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get BBMV for %s block %d: %w", col, b, err)
+			}
+
+			result, err = l.eval.Mul(result, bbmv)
+			if err != nil {
+				return nil, fmt.Errorf("block %d %s mul failed: %w", b, col, err)
+			}
+			result, err = l.eval.Rescale(result)
+			if err != nil {
+				return nil, fmt.Errorf("block %d %s rescale failed: %w", b, col, err)
+			}
+		}
+
+		results[b] = result
+	}
+
+	// Sum across blocks
+	var packed *rlwe.Ciphertext
+	for i, r := range results {
+		if packed == nil {
+			packed = r.CopyNew()
+		} else {
+			err := l.eval.AddInPlace(packed, r)
+			if err != nil {
+				return nil, fmt.Errorf("block %d sum failed: %w", i, err)
+			}
+		}
+	}
+
+	slots := l.eval.Slots()
+	rowsPerBlock := slots // simplified
+	requiresAgg := blockCount*rowsPerBlock > slots*(1<<l.config.Delta)
+
+	return &LBcResult{
+		PackedResults:       []*rlwe.Ciphertext{packed},
+		NumBlocks:           blockCount,
+		RowsPerBlock:        rowsPerBlock,
+		RequiresAggregation: requiresAgg,
+	}, nil
+}
+
+// PlaintextBc computes bin-count from plaintext (for validation)
+func PlaintextBc(values [][]int, conditions []int, valid []bool) int {
+	count := 0
+	for i := range valid {
+		if !valid[i] {
+			continue
+		}
+		match := true
+		for j, cond := range conditions {
+			if values[j][i] != cond {
+				match = false
+				break
+			}
+		}
+		if match {
+			count++
+		}
+	}
+	return count
+}
+
+// PlaintextBa computes bin-average from plaintext (for validation)
+func PlaintextBa(target []float64, values [][]int, conditions []int, valid []bool) float64 {
+	var sum float64
+	count := 0
+	for i := range valid {
+		if !valid[i] {
+			continue
+		}
+		match := true
+		for j, cond := range conditions {
+			if values[j][i] != cond {
+				match = false
+				break
+			}
+		}
+		if match {
+			sum += target[i]
+			count++
+		}
+	}
+	if count == 0 {
+		return 0
+	}
+	return sum / float64(count)
+}
+
+// PlaintextBv computes bin-variance from plaintext (for validation)
+func PlaintextBv(target []float64, values [][]int, conditions []int, valid []bool) float64 {
+	mean := PlaintextBa(target, values, conditions, valid)
+	var sumSq float64
+	count := 0
+	for i := range valid {
+		if !valid[i] {
+			continue
+		}
+		match := true
+		for j, cond := range conditions {
+			if values[j][i] != cond {
+				match = false
+				break
+			}
+		}
+		if match {
+			diff := target[i] - mean
+			sumSq += diff * diff
+			count++
+		}
+	}
+	if count == 0 {
+		return 0
+	}
+	return sumSq / float64(count)
+}

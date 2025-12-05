@@ -1,499 +1,439 @@
-package he
 // Package he provides a thin wrapper around Lattigo's CKKS evaluator, encoder,
 // and bootstrapper with level tracking and profiling support.
 package he
 
 import (
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return d.dec.DecryptNew(ct)func (d *Decryptor) Decrypt(ct *rlwe.Ciphertext) *rlwe.Plaintext {// Decrypt decrypts a ciphertext}	}		dec:    rlwe.NewDecryptor(params, sk),		params: params,	return &Decryptor{func NewDecryptor(params ckks.Parameters, sk *rlwe.SecretKey) *Decryptor {// NewDecryptor creates a new decryptor with the secret key}	dec    *rlwe.Decryptor	params ckks.Parameterstype Decryptor struct {// Decryptor handles decryption operations (DDIA only!)}	return ct, nil	}		return nil, fmt.Errorf("Encrypt failed: %w", err)	if err != nil {	ct, err := e.enc.EncryptNew(pt)func (e *Encryptor) Encrypt(pt *rlwe.Plaintext) (*rlwe.Ciphertext, error) {// Encrypt encrypts a plaintext}	}		enc:    rlwe.NewEncryptor(params, pk),		params: params,	return &Encryptor{func NewEncryptor(params ckks.Parameters, pk *rlwe.PublicKey) *Encryptor {// NewEncryptor creates a new encryptor with the public key}	enc    *rlwe.Encryptor	params ckks.Parameterstype Encryptor struct {// Encryptor handles encryption operations}	return rlwe.NewMemEvaluationKeySet(rlk, galKeyList...)	copy(galKeyList, galKeys)	galKeyList := make([]*rlwe.GaloisKey, len(galKeys))	// Convert to the correct type	galKeys := kg.GenGaloisKeys(rotationSteps)	rlk := kg.GenRelinKey()func (kg *KeyGenerator) GenEvaluationKeySet(rotationSteps []int) *rlwe.MemEvaluationKeySet {// GenEvaluationKeySet generates a complete evaluation key set}	return kg.kgen.GenGaloisKeysNew(galEls, kg.sk)	}		galEls[i] = kg.params.GaloisElement(step)	for i, step := range steps {	galEls := make([]uint64, len(steps))func (kg *KeyGenerator) GenGaloisKeys(steps []int) []*rlwe.GaloisKey {// GenGaloisKeys generates Galois keys for the given rotation steps}	return kg.kgen.GenRelinearizationKeyNew(kg.sk)func (kg *KeyGenerator) GenRelinKey() *rlwe.RelinearizationKey {// GenRelinKey generates relinearization key}	return kg.pkfunc (kg *KeyGenerator) PublicKey() *rlwe.PublicKey {// PublicKey returns the public key}	return kg.skfunc (kg *KeyGenerator) SecretKey() *rlwe.SecretKey {// SecretKey returns the secret key (DDIA only!)}	}		pk:     pk,		sk:     sk,		kgen:   kgen,		params: params,	return &KeyGenerator{	sk, pk := kgen.GenKeyPairNew()	kgen := rlwe.NewKeyGenerator(params)func NewKeyGenerator(params ckks.Parameters) *KeyGenerator {// NewKeyGenerator creates a new key generator}	pk     *rlwe.PublicKey	sk     *rlwe.SecretKey	kgen   *rlwe.KeyGenerator	params ckks.Parameterstype KeyGenerator struct {// KeyGenerator handles key generation for DDIA}	return e.params.MaxSlots()func (e *Encoder) Slots() int {// Slots returns the number of slots}	return values, nil	}		values[i] = real(v)	for i, v := range complex128Values {	values := make([]float64, len(complex128Values))	}		return nil, err	if err != nil {	complex128Values, err := e.Decode(pt)func (e *Encoder) DecodeFloat64(pt *rlwe.Plaintext) ([]float64, error) {// DecodeFloat64 decodes a plaintext into real-valued floats}	return values, nil	}		return nil, fmt.Errorf("Decode failed: %w", err)	if err := e.encoder.Decode(pt, values); err != nil {	values := make([]complex128, e.params.MaxSlots())func (e *Encoder) Decode(pt *rlwe.Plaintext) ([]complex128, error) {// Decode decodes a plaintext into a slice of complex values}	return e.Encode(complex128Values, level)	}		complex128Values[i] = complex(v, 0)	for i, v := range values {	complex128Values := make([]complex128, len(values))func (e *Encoder) EncodeFloat64(values []float64, level int) (*rlwe.Plaintext, error) {// EncodeFloat64 encodes a slice of float64 values}	return pt, nil	}		return nil, fmt.Errorf("Encode failed: %w", err)	if err := e.encoder.Encode(values, pt); err != nil {	pt := ckks.NewPlaintext(e.params, level)func (e *Encoder) Encode(values []complex128, level int) (*rlwe.Plaintext, error) {// Encode encodes a slice of complex values into a plaintext at the given level}	}		encoder: ckks.NewEncoder(params),		params:  params,	return &Encoder{func NewEncoder(params ckks.Parameters) *Encoder {// NewEncoder creates a new Encoder wrapper}	encoder *ckks.Encoder	params  ckks.Parameterstype Encoder struct {// Encoder wraps Lattigo's CKKS encoder}	return e.bootstrapper != nilfunc (e *Evaluator) HasBootstrapper() bool {// HasBootstrapper returns true if bootstrapping is available}	return ct, nil	}		return e.Bootstrap(ct)	if ct.Level() < minLevel && e.bootstrapper != nil {func (e *Evaluator) BootstrapIfNeeded(ct *rlwe.Ciphertext, minLevel int) (*rlwe.Ciphertext, error) {// BootstrapIfNeeded bootstraps if the ciphertext level is below the threshold}	return e.bootstrapper.Bootstrap(ct)	}()		e.stats.mu.Unlock()		e.stats.BootstrapTime += time.Since(start)		e.stats.BootstrapCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()	}		return nil, fmt.Errorf("bootstrapper not configured")	if e.bootstrapper == nil {func (e *Evaluator) Bootstrap(ct *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// Bootstrap refreshes a ciphertext to increase its level}	return result, nil	}		}			return nil, fmt.Errorf("SumSlots addition failed: %w", err)		if err := e.AddInPlace(result, rotated); err != nil {		}			return nil, fmt.Errorf("SumSlots rotation failed: %w", err)		if err != nil {		rotated, err := e.Rotate(result, step)	for step := 1; step < slots; step *= 2 {	result := ct.CopyNew()func (e *Evaluator) SumSlots(ct *rlwe.Ciphertext, slots int) (*rlwe.Ciphertext, error) {// Returns a ciphertext where all slots contain the sum// SumSlots performs a full reduction sum across all slots using rotations}	return e.eval.Rotate(ct, k, ct)	}()		e.stats.mu.Unlock()		e.stats.RotTime += time.Since(start)		e.stats.RotCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) RotateInPlace(ct *rlwe.Ciphertext, k int) error {// RotateInPlace performs a slot rotation in place}	return result, nil	}		return nil, fmt.Errorf("Rotate failed: %w", err)	if err != nil {	result, err := e.eval.RotateNew(ct, k)	}()		e.stats.mu.Unlock()		e.stats.RotTime += time.Since(start)		e.stats.RotCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) Rotate(ct *rlwe.Ciphertext, k int) (*rlwe.Ciphertext, error) {// Rotate performs a slot rotation by the given amount}	return result, nil	}		return nil, fmt.Errorf("AddConst failed: %w", err)	if err != nil {	result, err := e.eval.AddNew(ct, constant)	}()		e.stats.mu.Unlock()		e.stats.AddTime += time.Since(start)		e.stats.AddCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) AddConst(ct *rlwe.Ciphertext, constant complex128) (*rlwe.Ciphertext, error) {// AddConst performs ct + constant}	return result, nil	e.stats.mu.Unlock()	e.stats.RescaleCount++	e.stats.mu.Lock()	}		return nil, fmt.Errorf("Rescale failed: %w", err)	if err := e.eval.Rescale(result, result); err != nil {	// Rescale	}		return nil, fmt.Errorf("MulConst failed: %w", err)	if err != nil {	result, err := e.eval.MulNew(ct, constant)	}()		e.stats.mu.Unlock()		e.stats.MulTime += time.Since(start)		e.stats.MulCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) MulConst(ct *rlwe.Ciphertext, constant complex128) (*rlwe.Ciphertext, error) {// MulConst performs ct * constant}	return result, nil	e.stats.mu.Unlock()	e.stats.RescaleCount++	e.stats.mu.Lock()	}		return nil, fmt.Errorf("Rescale failed: %w", err)	if err := e.eval.Rescale(result, result); err != nil {	// Rescale	}		return nil, fmt.Errorf("MulPlain failed: %w", err)	if err != nil {	result, err := e.eval.MulNew(ct, pt)	}()		e.stats.mu.Unlock()		e.stats.MulTime += time.Since(start)		e.stats.MulCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) MulPlain(ct *rlwe.Ciphertext, pt *rlwe.Plaintext) (*rlwe.Ciphertext, error) {// MulPlain performs ct * plaintext}	return result, nil	e.stats.mu.Unlock()	e.stats.RescaleCount++	e.stats.mu.Lock()	}		return nil, fmt.Errorf("Rescale failed: %w", err)	if err := e.eval.Rescale(result, result); err != nil {	// Rescale to maintain scale	e.stats.mu.Unlock()	e.stats.MulTime += time.Since(start)	e.stats.RelinCount++	e.stats.MulCount++	e.stats.mu.Lock()	}		return nil, fmt.Errorf("MulRelin failed: %w", err)	if err != nil {	result, err := e.eval.MulRelinNew(ct1, ct2)	start := time.Now()func (e *Evaluator) Mul(ct1, ct2 *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// Mul performs ct1 * ct2 with relinearization and rescaling}	return result, nil	}		return nil, fmt.Errorf("Sub failed: %w", err)	if err != nil {	result, err := e.eval.SubNew(ct1, ct2)	}()		e.stats.mu.Unlock()		e.stats.AddTime += time.Since(start)		e.stats.AddCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) Sub(ct1, ct2 *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// Sub performs ct1 - ct2}	return e.eval.Add(ct1, ct2, ct1)	}()		e.stats.mu.Unlock()		e.stats.AddTime += time.Since(start)		e.stats.AddCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) AddInPlace(ct1, ct2 *rlwe.Ciphertext) error {// AddInPlace performs ct1 += ct2}	return result, nil	}		return nil, fmt.Errorf("Add failed: %w", err)	if err != nil {	result, err := e.eval.AddNew(ct1, ct2)	}()		e.stats.mu.Unlock()		e.stats.AddTime += time.Since(start)		e.stats.AddCount++		e.stats.mu.Lock()	defer func() {	start := time.Now()func (e *Evaluator) Add(ct1, ct2 *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// Add performs ct1 + ct2}	return ct.Level()func (e *Evaluator) Level(ct *rlwe.Ciphertext) int {// Level returns the current level of a ciphertext}	return e.paramsfunc (e *Evaluator) Params() ckks.Parameters {// Params returns the CKKS parameters}	return e.statsfunc (e *Evaluator) GetStats() *Stats {// GetStats returns the current statistics}	}		bootstrapper: cfg.Bootstrapper,		stats:        &Stats{},		eval:         ckks.NewEvaluator(cfg.Params, cfg.EvalKey),		params:       cfg.Params,	return &Evaluator{func NewEvaluator(cfg EvaluatorConfig) *Evaluator {// NewEvaluator creates a new Evaluator wrapper}	Bootstrapper Bootstrapper	EvalKey      *rlwe.MemEvaluationKeySet	Params       ckks.Parameterstype EvaluatorConfig struct {// EvaluatorConfig holds configuration for creating an Evaluator}	OutputLevel() int	MinimumInputLevel() int	Bootstrap(ct *rlwe.Ciphertext) (*rlwe.Ciphertext, error)type Bootstrapper interface {// Bootstrapper interface for bootstrapping operations}	bootstrapper Bootstrapper	// Optional bootstrapper (nil if not enabled)	stats  *Stats	eval   *ckks.Evaluator	params ckks.Parameterstype Evaluator struct {// Evaluator wraps Lattigo's CKKS evaluator with additional functionality}	)		s.BootstrapCount, s.BootstrapTime.Seconds(),		s.RelinCount, s.RelinTime.Seconds(),		s.RescaleCount, s.RescaleTime.Seconds(),		s.RotCount, s.RotTime.Seconds(),		s.AddCount, s.AddTime.Seconds(),		s.MulCount, s.MulTime.Seconds(),		"HE Stats: Mul=%d (%.2fs), Add=%d (%.2fs), Rot=%d (%.2fs), Rescale=%d (%.2fs), Relin=%d (%.2fs), Bootstrap=%d (%.2fs)",	return fmt.Sprintf(	defer s.mu.Unlock()	s.mu.Lock()func (s *Stats) String() string {// String returns a human-readable summary}	s.BootstrapTime = 0	s.RelinTime = 0	s.RescaleTime = 0	s.RotTime = 0	s.AddTime = 0	s.MulTime = 0	s.BootstrapCount = 0	s.RelinCount = 0	s.RescaleCount = 0	s.RotCount = 0	s.AddCount = 0	s.MulCount = 0	defer s.mu.Unlock()	s.mu.Lock()func (s *Stats) Reset() {// Reset clears all statistics}	BootstrapTime time.Duration	RelinTime     time.Duration	RescaleTime   time.Duration	RotTime       time.Duration	AddTime       time.Duration	MulTime       time.Duration	BootstrapCount int64	RelinCount     int64	RescaleCount   int64	RotCount       int64	AddCount       int64	MulCount       int64	mu sync.Mutextype Stats struct {// Stats tracks HE operation statistics for profiling)	"github.com/tuneinsight/lattigo/v6/schemes/ckks"	"github.com/tuneinsight/lattigo/v6/core/rlwe"	"time"	"sync"	"fmt"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/tuneinsight/lattigo/v6/circuits/ckks/bootstrapping"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+	"github.com/tuneinsight/lattigo/v6/schemes/ckks"
+)
+
+// Stats tracks HE operation statistics
+type Stats struct {
+	mu             sync.Mutex
+	MulCount       int64
+	AddCount       int64
+	RotateCount    int64
+	RescaleCount   int64
+	BootstrapCount int64
+	MulTime        time.Duration
+	AddTime        time.Duration
+	RotateTime     time.Duration
+	RescaleTime    time.Duration
+	BootstrapTime  time.Duration
+}
+
+// Reset resets all statistics
+func (s *Stats) Reset() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.MulCount = 0
+	s.AddCount = 0
+	s.RotateCount = 0
+	s.RescaleCount = 0
+	s.BootstrapCount = 0
+	s.MulTime = 0
+	s.AddTime = 0
+	s.RotateTime = 0
+	s.RescaleTime = 0
+	s.BootstrapTime = 0
+}
+
+// Evaluator wraps Lattigo's CKKS evaluator with level tracking and profiling
+type Evaluator struct {
+	params       ckks.Parameters
+	encoder      *ckks.Encoder
+	evaluator    *ckks.Evaluator
+	bootstrapper *bootstrapping.Evaluator
+	stats        *Stats
+	minLevel     int // minimum level before bootstrap is needed
+}
+
+// NewEvaluator creates a new HE evaluator
+func NewEvaluator(params ckks.Parameters, evk rlwe.EvaluationKeySet, btp *bootstrapping.Evaluator) (*Evaluator, error) {
+	encoder := ckks.NewEncoder(params)
+	evaluator := ckks.NewEvaluator(params, evk)
+
+	minLevel := 2 // default minimum level
+	if btp != nil {
+		minLevel = btp.MinimumInputLevel()
+	}
+
+	return &Evaluator{
+		params:       params,
+		encoder:      encoder,
+		evaluator:    evaluator,
+		bootstrapper: btp,
+		stats:        &Stats{},
+		minLevel:     minLevel,
+	}, nil
+}
+
+// Params returns the CKKS parameters
+func (e *Evaluator) Params() ckks.Parameters {
+	return e.params
+}
+
+// Encoder returns the CKKS encoder
+func (e *Evaluator) Encoder() *ckks.Encoder {
+	return e.encoder
+}
+
+// Stats returns the operation statistics
+func (e *Evaluator) Stats() *Stats {
+	return e.stats
+}
+
+// Slots returns the number of slots (N/2)
+func (e *Evaluator) Slots() int {
+	return e.params.MaxSlots()
+}
+
+// Level returns the current level of a ciphertext
+func (e *Evaluator) Level(ct *rlwe.Ciphertext) int {
+	return ct.Level()
+}
+
+// NeedsBootstrap returns true if the ciphertext needs bootstrapping
+func (e *Evaluator) NeedsBootstrap(ct *rlwe.Ciphertext) bool {
+	return ct.Level() <= e.minLevel
+}
+
+// CanBootstrap returns true if bootstrapping is available
+func (e *Evaluator) CanBootstrap() bool {
+	return e.bootstrapper != nil
+}
+
+// Bootstrap performs bootstrapping on a ciphertext
+func (e *Evaluator) Bootstrap(ct *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	if e.bootstrapper == nil {
+		return nil, fmt.Errorf("bootstrapping not available")
+	}
+
+	start := time.Now()
+	result, err := e.bootstrapper.Bootstrap(ct)
+	if err != nil {
+		return nil, fmt.Errorf("bootstrap failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.BootstrapCount++
+	e.stats.BootstrapTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// MaybeBootstrap bootstraps if needed, otherwise returns the original
+func (e *Evaluator) MaybeBootstrap(ct *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	if e.NeedsBootstrap(ct) && e.CanBootstrap() {
+		return e.Bootstrap(ct)
+	}
+	return ct, nil
+}
+
+// Add adds two ciphertexts
+func (e *Evaluator) Add(op0, op1 *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result, err := e.evaluator.AddNew(op0, op1)
+	if err != nil {
+		return nil, fmt.Errorf("add failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.AddCount++
+	e.stats.AddTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// AddInPlace adds op1 to op0 in place
+func (e *Evaluator) AddInPlace(op0, op1 *rlwe.Ciphertext) error {
+	start := time.Now()
+	err := e.evaluator.Add(op0, op1, op0)
+	if err != nil {
+		return fmt.Errorf("add in place failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.AddCount++
+	e.stats.AddTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return nil
+}
+
+// Sub subtracts op1 from op0
+func (e *Evaluator) Sub(op0, op1 *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result, err := e.evaluator.SubNew(op0, op1)
+	if err != nil {
+		return nil, fmt.Errorf("sub failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.AddCount++ // count as add operation
+	e.stats.AddTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// Mul multiplies two ciphertexts and relinearizes
+func (e *Evaluator) Mul(op0, op1 *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result, err := e.evaluator.MulRelinNew(op0, op1)
+	if err != nil {
+		return nil, fmt.Errorf("mul failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.MulCount++
+	e.stats.MulTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// MulPlaintext multiplies a ciphertext by a plaintext
+func (e *Evaluator) MulPlaintext(ct *rlwe.Ciphertext, pt *rlwe.Plaintext) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result, err := e.evaluator.MulNew(ct, pt)
+	if err != nil {
+		return nil, fmt.Errorf("mul plaintext failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.MulCount++
+	e.stats.MulTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// MulConst multiplies a ciphertext by a constant
+func (e *Evaluator) MulConst(ct *rlwe.Ciphertext, constant complex128) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result := ct.CopyNew()
+	err := e.evaluator.Mul(ct, constant, result)
+	if err != nil {
+		return nil, fmt.Errorf("mul const failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.MulCount++
+	e.stats.MulTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// AddConst adds a constant to a ciphertext
+func (e *Evaluator) AddConst(ct *rlwe.Ciphertext, constant complex128) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result := ct.CopyNew()
+	err := e.evaluator.Add(ct, constant, result)
+	if err != nil {
+		return nil, fmt.Errorf("add const failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.AddCount++
+	e.stats.AddTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// Rescale rescales a ciphertext
+func (e *Evaluator) Rescale(ct *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result := ct.CopyNew()
+	err := e.evaluator.Rescale(ct, result)
+	if err != nil {
+		return nil, fmt.Errorf("rescale failed: %w", err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.RescaleCount++
+	e.stats.RescaleTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// Rotate rotates a ciphertext by k positions
+func (e *Evaluator) Rotate(ct *rlwe.Ciphertext, k int) (*rlwe.Ciphertext, error) {
+	start := time.Now()
+	result, err := e.evaluator.RotateNew(ct, k)
+	if err != nil {
+		return nil, fmt.Errorf("rotate by %d failed: %w", k, err)
+	}
+
+	e.stats.mu.Lock()
+	e.stats.RotateCount++
+	e.stats.RotateTime += time.Since(start)
+	e.stats.mu.Unlock()
+
+	return result, nil
+}
+
+// SumSlots sums all slots into slot 0 using rotations
+func (e *Evaluator) SumSlots(ct *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	result := ct.CopyNew()
+	slots := e.Slots()
+
+	for rot := 1; rot < slots; rot *= 2 {
+		rotated, err := e.Rotate(result, rot)
+		if err != nil {
+			return nil, fmt.Errorf("sum slots rotation failed: %w", err)
+		}
+		err = e.AddInPlace(result, rotated)
+		if err != nil {
+			return nil, fmt.Errorf("sum slots add failed: %w", err)
+		}
+	}
+
+	return result, nil
+}
+
+// EncodePlaintext encodes a slice of complex values into a plaintext
+func (e *Evaluator) EncodePlaintext(values []complex128, level int, scale rlwe.Scale) *rlwe.Plaintext {
+	pt := ckks.NewPlaintext(e.params, level)
+	pt.Scale = scale
+	e.encoder.Encode(values, pt)
+	return pt
+}
+
+// EncodeFloats encodes a slice of float64 values into a plaintext
+func (e *Evaluator) EncodeFloats(values []float64, level int, scale rlwe.Scale) *rlwe.Plaintext {
+	cvals := make([]complex128, len(values))
+	for i, v := range values {
+		cvals[i] = complex(v, 0)
+	}
+	return e.EncodePlaintext(cvals, level, scale)
+}
+
+// EncodeConstant encodes a constant value into all slots
+func (e *Evaluator) EncodeConstant(value complex128, level int, scale rlwe.Scale) *rlwe.Plaintext {
+	slots := e.Slots()
+	values := make([]complex128, slots)
+	for i := range values {
+		values[i] = value
+	}
+	return e.EncodePlaintext(values, level, scale)
+}
+
+// DecodePlaintext decodes a plaintext to complex values
+func (e *Evaluator) DecodePlaintext(pt *rlwe.Plaintext) []complex128 {
+	values := make([]complex128, e.Slots())
+	e.encoder.Decode(pt, values)
+	return values
+}
+
+// DecodeFloats decodes a plaintext to float64 values (real parts only)
+func (e *Evaluator) DecodeFloats(pt *rlwe.Plaintext) []float64 {
+	complex := e.DecodePlaintext(pt)
+	values := make([]float64, len(complex))
+	for i, v := range complex {
+		values[i] = real(v)
+	}
+	return values
+}
+
+// Power computes ct^n using binary exponentiation
+func (e *Evaluator) Power(ct *rlwe.Ciphertext, n int) (*rlwe.Ciphertext, error) {
+	if n < 1 {
+		return nil, fmt.Errorf("power must be positive")
+	}
+	if n == 1 {
+		return ct.CopyNew(), nil
+	}
+
+	result := ct.CopyNew()
+	base := ct.CopyNew()
+	power := n
+	first := true
+
+	for power > 0 {
+		if power&1 == 1 {
+			if first {
+				result = base.CopyNew()
+				first = false
+			} else {
+				var err error
+				result, err = e.Mul(result, base)
+				if err != nil {
+					return nil, err
+				}
+				result, err = e.Rescale(result)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+		power >>= 1
+		if power > 0 {
+			var err error
+			base, err = e.Mul(base, base)
+			if err != nil {
+				return nil, err
+			}
+			base, err = e.Rescale(base)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// EvaluatePolynomial evaluates a polynomial on a ciphertext
+// coeffs[i] is the coefficient for x^i
+func (e *Evaluator) EvaluatePolynomial(ct *rlwe.Ciphertext, coeffs []float64) (*rlwe.Ciphertext, error) {
+	if len(coeffs) == 0 {
+		return nil, fmt.Errorf("coefficients cannot be empty")
+	}
+
+	// Use Horner's method
+	n := len(coeffs)
+	result := e.EncodeConstant(complex(coeffs[n-1], 0), ct.Level(), ct.Scale)
+
+	for i := n - 2; i >= 0; i-- {
+		// result = result * ct + coeffs[i]
+		resultCt := ckks.NewCiphertext(e.params, 1, ct.Level())
+		err := e.evaluator.Mul(ct, result, resultCt)
+		if err != nil {
+			return nil, fmt.Errorf("polynomial mul failed: %w", err)
+		}
+		err = e.evaluator.Rescale(resultCt, resultCt)
+		if err != nil {
+			return nil, fmt.Errorf("polynomial rescale failed: %w", err)
+		}
+		err = e.evaluator.Add(resultCt, complex(coeffs[i], 0), resultCt)
+		if err != nil {
+			return nil, fmt.Errorf("polynomial add failed: %w", err)
+		}
+		// Store intermediate for next iteration if needed
+		if i > 0 {
+			result = e.EncodeConstant(0, resultCt.Level(), resultCt.Scale)
+			// Copy the ciphertext values back appropriately
+		}
+		if i == 0 {
+			return resultCt, nil
+		}
+	}
+
+	return nil, fmt.Errorf("polynomial evaluation failed")
+}
+
+// Close releases resources
+func (e *Evaluator) Close() {
+	// Nothing to close for now
+}

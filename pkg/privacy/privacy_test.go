@@ -1,164 +1,138 @@
 package privacy
-package privacy
 
 import (
+	"bytes"
 	"testing"
 )
 
-func TestPolicyConfig(t *testing.T) {
-	cfg := DefaultPolicyConfig()
+func TestDefaultPolicy(t *testing.T) {
+	policy := DefaultPolicy()
 
-	if cfg.KAnonymityThreshold <= 0 {
-		t.Error("K-anonymity threshold should be positive")
+	if policy == nil {
+		t.Fatal("DefaultPolicy returned nil")
 	}
-	if len(cfg.AllowedOperations) == 0 {
-		t.Error("Should have allowed operations")
+
+	if policy.ID != "default" {
+		t.Errorf("Expected ID 'default', got '%s'", policy.ID)
+	}
+
+	if policy.MinCount != 5 {
+		t.Errorf("Expected MinCount=5, got %d", policy.MinCount)
+	}
+
+	if policy.MaxPrecision != 4 {
+		t.Errorf("Expected MaxPrecision=4, got %d", policy.MaxPrecision)
+	}
+
+	if !policy.SuppressSmallGroups {
+		t.Error("Expected SuppressSmallGroups=true")
+	}
+
+	if !policy.RoundingEnabled {
+		t.Error("Expected RoundingEnabled=true")
+	}
+
+	if !policy.AuditEnabled {
+		t.Error("Expected AuditEnabled=true")
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	}		t.Errorf("Expected 1.0 or 1.5, got %f", transformed)	if transformed != 1.0 && transformed != 1.5 {	// Should round to nearest 0.5	transformed := result.TransformedVal.(float64)	result, _ := inspector.InspectNumericResult(1.23, "job1", "mean", []string{"x"})	inspector := NewInspector(&cfg)	cfg.RoundingMultiple = 0.5	cfg := DefaultPolicyConfig()func TestRoundingMultiple(t *testing.T) {}	}		t.Error("Second log entry should be job2")	if log[1].JobID != "job2" {	}		t.Error("First log entry should be job1")	if log[0].JobID != "job1" {	}		t.Errorf("Expected 2 log entries, got %d", len(log))	if len(log) != 2 {	log := inspector.GetAuditLog()	inspector.InspectBinCount(10, "job2", []string{"gender"}, nil)	inspector.InspectNumericResult(1.0, "job1", "mean", []string{"income"})	inspector := NewInspector(nil) // Use defaultsfunc TestAuditLog(t *testing.T) {}	}		t.Error("Mean should be approved")	if !result.Approved {	result, _ = inspector.InspectNumericResult(1.0, "job2", "mean", []string{"x"})	}		t.Error("Variance should not be approved when only mean is allowed")	if result.Approved {	result, _ := inspector.InspectNumericResult(1.0, "job1", "var", []string{"x"})	inspector := NewInspector(&cfg)	cfg.AllowedOperations = []string{"mean"} // Only mean allowed	cfg := DefaultPolicyConfig()func TestDisallowedOperation(t *testing.T) {}	}		t.Error("Should hit limit")	if err := inspector.CheckQueryLimit(); err == nil {	inspector.InspectNumericResult(2.0, "job2", "mean", []string{"y"})	}		t.Error("Should not hit limit yet")	if err := inspector.CheckQueryLimit(); err != nil {	inspector.InspectNumericResult(1.0, "job1", "mean", []string{"x"})	// First two queries should pass	inspector := NewInspector(&cfg)	cfg.MaxQueriesPerSession = 2	cfg := DefaultPolicyConfig()func TestCheckQueryLimit(t *testing.T) {}	}		t.Error("Cell 1,0 should be suppressed")	if _, exists := transformed["1,0"]; exists {	}		t.Fatal("TransformedVal should be map")	if !ok {	transformed, ok := result.TransformedVal.(map[string]int64)	}		t.Errorf("Expected 1 suppression, got %d", len(result.Suppressions))	if len(result.Suppressions) != 1 {	}		t.Error("Table should be approved (with suppressions)")	if !result.Approved {	result, _ := inspector.InspectContingencyTable(counts, "job1", []string{"gender", "region"})	}		"1,1": 80,		"1,0": 3, // Below threshold		"0,1": 50,		"0,0": 100,	counts := map[string]int64{	inspector := NewInspector(&cfg)	cfg.KAnonymityThreshold = 5	cfg := DefaultPolicyConfig()func TestInspectContingencyTable(t *testing.T) {}	}		t.Error("Should have suppression note")	if len(result.Suppressions) == 0 {	}		t.Error("Count 3 should not be approved (below k-anonymity)")	if result.Approved {	result, _ = inspector.InspectBinCount(3, "job2", []string{"gender"}, []string{"gender=1"})	// Count below threshold	}		t.Error("Count 10 should be approved")	if !result.Approved {	result, _ := inspector.InspectBinCount(10, "job1", []string{"gender"}, []string{"gender=1"})	// Count above threshold	inspector := NewInspector(&cfg)	cfg.KAnonymityThreshold = 5	cfg := DefaultPolicyConfig()func TestInspectBinCount(t *testing.T) {}	}		t.Errorf("Expected 1.23, got %f", transformed)	if transformed != 1.23 {	// With precision 2, should be 1.23	}		t.Fatal("TransformedVal should be float64")	if !ok {	transformed, ok := result.TransformedVal.(float64)	}		t.Error("Result should be approved")	if !result.Approved {	}		t.Fatalf("Inspection failed: %v", err)	if err != nil {	result, err := inspector.InspectNumericResult(1.23456789, "job1", "mean", []string{"income"})	inspector := NewInspector(&cfg)	cfg.MaxPrecision = 2	cfg := DefaultPolicyConfig()func TestInspectNumericResult(t *testing.T) {
+func TestNewInspector(t *testing.T) {
+	// Test with nil policy (should use default)
+	inspector := NewInspector(nil)
+	if inspector == nil {
+		t.Fatal("NewInspector returned nil")
+	}
+
+	// Test with custom policy
+	customPolicy := &Policy{
+		ID:       "custom",
+		MinCount: 10,
+	}
+	inspector2 := NewInspector(customPolicy)
+	if inspector2 == nil {
+		t.Fatal("NewInspector with custom policy returned nil")
+	}
+}
+
+func TestPolicy(t *testing.T) {
+	policy := &Policy{
+		ID:                  "test",
+		Name:                "Test Policy",
+		MinCount:            10,
+		MaxPrecision:        2,
+		SuppressSmallGroups: true,
+		RoundingEnabled:     false,
+		AuditEnabled:        true,
+	}
+
+	if policy.ID != "test" {
+		t.Errorf("Expected ID 'test', got '%s'", policy.ID)
+	}
+	if policy.Name != "Test Policy" {
+		t.Errorf("Expected Name 'Test Policy', got '%s'", policy.Name)
+	}
+	if policy.MinCount != 10 {
+		t.Errorf("Expected MinCount=10, got %d", policy.MinCount)
+	}
+}
+
+func TestParsePolicyFromJSON(t *testing.T) {
+	jsonData := `{
+		"id": "json_policy",
+		"name": "JSON Policy",
+		"min_count": 15,
+		"max_precision": 3,
+		"suppress_small_groups": true,
+		"rounding_enabled": true,
+		"audit_enabled": false
+	}`
+
+	buf := bytes.NewBufferString(jsonData)
+	policy, err := ParsePolicy(buf)
+	if err != nil {
+		t.Fatalf("ParsePolicy failed: %v", err)
+	}
+
+	if policy.ID != "json_policy" {
+		t.Errorf("Expected ID 'json_policy', got '%s'", policy.ID)
+	}
+	if policy.MinCount != 15 {
+		t.Errorf("Expected MinCount=15, got %d", policy.MinCount)
+	}
+	if !policy.SuppressSmallGroups {
+		t.Error("Expected SuppressSmallGroups=true")
+	}
+}
+
+func TestInspectionResult(t *testing.T) {
+	result := &InspectionResult{
+		Approved:         true,
+		Violations:       []Violation{},
+		TransformedValue: 42.5,
+	}
+
+	if !result.Approved {
+		t.Error("Expected result to be approved")
+	}
+	if len(result.Violations) != 0 {
+		t.Error("Expected no violations")
+	}
+	if result.TransformedValue != 42.5 {
+		t.Errorf("Expected TransformedValue=42.5, got %v", result.TransformedValue)
+	}
+}
+
+func TestViolation(t *testing.T) {
+	violation := Violation{
+		Rule:    "min_count",
+		Message: "Count is below minimum threshold",
+	}
+
+	if violation.Rule != "min_count" {
+		t.Errorf("Expected Rule 'min_count', got '%s'", violation.Rule)
+	}
+	if violation.Message == "" {
+		t.Error("Expected non-empty message")
+	}
+}

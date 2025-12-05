@@ -1,506 +1,470 @@
-package approx
 // Package approx implements approximation functions for HE:
-// DISCRETEEQUALZERO (equality to zero check) and APPROXSIGN (sign approximation).
+// DISCRETEEQUALZERO (equality check), APPROXSIGN (sign function),
+// and table lookup using polynomial approximations.
 package approx
 
 import (
 	"fmt"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	return results, nil	}		}			return nil, fmt.Errorf("failed to multiply in block %d: %w", i, err)		if err != nil {		results[i], err = a.eval.Mul(eq, numericBlocks[i])		// Multiply by numeric value		}			return nil, fmt.Errorf("failed to compute equality in block %d: %w", i, err)		if err != nil {		eq, err := a.DiscreteEqualZero(shifted, cfg)		// Apply DISCRETEEQUALZERO		}			return nil, fmt.Errorf("failed to shift category in block %d: %w", i, err)		if err != nil {		shifted, err := a.eval.AddConst(categoricalBlocks[i], complex(-float64(targetCategory), 0))		// Compute cat - target	for i := range categoricalBlocks {	results := make([]*rlwe.Ciphertext, len(categoricalBlocks))	}		return nil, fmt.Errorf("block count mismatch")	if len(categoricalBlocks) != len(numericBlocks) {) ([]*rlwe.Ciphertext, error) {	cfg *DiscreteEqualZeroConfig,	targetCategory int,	numericBlocks []*rlwe.Ciphertext,	categoricalBlocks []*rlwe.Ciphertext,func (a *ApproxOps) TableLookup(// Returns: DISCRETEEQUALZERO(cat - target) * numeric// TableLookup selects values from a numeric column where a categorical equals a target}	return result, nil	}		return nil, fmt.Errorf("failed to scale: %w", err)	if err != nil {	result, err = a.eval.MulConst(result, 0.5)	}		return nil, fmt.Errorf("failed to shift: %w", err)	if err != nil {	result, err := a.eval.AddConst(sign, 1)	// Map from [-1, 1] to [0, 1]: (sign + 1) / 2	}		return nil, fmt.Errorf("failed to apply sign: %w", err)	if err != nil {	sign, err := a.ApproxSign(diff, cfg)	// Apply sign approximation	}		return nil, fmt.Errorf("failed to compute difference: %w", err)	if err != nil {	diff, err := a.eval.Sub(x1, x2)	// Compute x1 - x2func (a *ApproxOps) Comparison(x1, x2 *rlwe.Ciphertext, cfg *ApproxSignConfig) (*rlwe.Ciphertext, error) {// Returns approximately 1 if x1 > x2, 0 otherwise// Comparison computes approximate comparison x1 > x2}	return result, nil	}		return nil, fmt.Errorf("failed to divide by 2: %w", err)	if err != nil {	result, err := a.eval.MulConst(prod, 0.5)	// Divide by 2	}		return nil, fmt.Errorf("failed to multiply: %w", err)	if err != nil {	prod, err := a.eval.Mul(x, diff)	// x * (3 - x²)	}		return nil, fmt.Errorf("failed to add 3: %w", err)	if err != nil {	diff, err = a.eval.AddConst(diff, 3)	}		return nil, fmt.Errorf("failed to negate x²: %w", err)	if err != nil {	diff, err := a.eval.MulConst(x2, -1)	// 3 - x²	}		return nil, fmt.Errorf("failed to compute x²: %w", err)	if err != nil {	x2, err := a.eval.Mul(x, x)	// x²func (a *ApproxOps) signIteration(x *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// g(x) = x * (3 - x²) / 2// signIteration applies one iteration of the sign approximation}	return result, nil	}		}			return nil, fmt.Errorf("failed sign iteration %d: %w", i, err)		if err != nil {		result, err = a.signIteration(result)		}			return nil, fmt.Errorf("failed to bootstrap at iteration %d: %w", i, err)		if err != nil {		result, err := a.eval.BootstrapIfNeeded(result, 3)		// Bootstrap if needed	for i := 0; i < config.Iterations; i++ {	// This converges to sign(x) for |x| <= 1	// We use: g(x) = x * (3 - x²) / 2 iterated	// Apply iterative polynomial approximation	}		}			return nil, fmt.Errorf("failed to scale input: %w", err)		if err != nil {		result, err = a.eval.MulConst(x, complex(config.Alpha, 0))		var err error	if config.Alpha != 1.0 {	result := x	// Scale input by alpha	}		}			config.Alpha = cfg.Alpha		if cfg.Alpha > 0 {		}			config.Degree = cfg.Degree		if cfg.Degree > 0 {		}			config.Iterations = cfg.Iterations		if cfg.Iterations > 0 {	if cfg != nil {	config := DefaultApproxSignConfig()func (a *ApproxOps) ApproxSign(x *rlwe.Ciphertext, cfg *ApproxSignConfig) (*rlwe.Ciphertext, error) {// Uses composite polynomial approximation with bootstrapping// Returns approximately -1 for negative, +1 for positive, 0 near zero// ApproxSign computes an approximation of the sign function}	}		Alpha:      1.0,		Degree:     5,		Iterations: 3,	return ApproxSignConfig{func DefaultApproxSignConfig() ApproxSignConfig {// DefaultApproxSignConfig returns default configuration}	Alpha      float64 // Scaling factor for input range	Degree     int     // Polynomial degree for each iteration	Iterations int     // Number of polynomial iterations for sharpeningtype ApproxSignConfig struct {// ApproxSignConfig configures the APPROXSIGN algorithm}	return coeffs[:n]	}		n = len(coeffs)	if n > len(coeffs) {	}		0.0,                 // c15		0.0000000059472131,  // c14		0.0,                 // c13		-0.0000004554326778, // c12		0.0,                 // c11		0.0000248057629896,  // c10		0.0,                 // c9		-0.0009192893474550, // c8		0.0,                 // c7		0.0211533320624071,  // c6		0.0,                 // c5		-0.2545071453209360, // c4		0.0,                 // c3		1.2337005501361697,  // c2		0.0,                 // c1: odd function = 0		-0.4052847345693510, // c0: average value	coeffs := []float64{	// Pre-computed for efficiency	// cos(πx) = c0 + c1*x + c2*x² + ...	// These are the Chebyshev expansion coefficients for cos(π*x) on [-1,1]func getCosCoefficients(n int) []float64 {// getCosCoefficients returns Chebyshev coefficients for cos(π*x)}	return sum, nil	}		}			}				return nil, fmt.Errorf("failed to add term %d: %w", k, err)			if err != nil {			sum, err = a.eval.Add(sum, term)		} else {			sum = term		if sum == nil {		}			continue // Skip if we don't have enough powers		} else {			}				return nil, fmt.Errorf("failed to compute c%d * x^%d: %w", k, k, err)			if err != nil {			term, err = a.eval.MulConst(powers[k-1], complex(c, 0))			// c_k * x^k		} else if k <= len(powers) {			}				return nil, fmt.Errorf("failed to add c0: %w", err)			if err != nil {			term, err = a.eval.AddConst(term, complex(c, 0))			}				return nil, fmt.Errorf("failed to create zero: %w", err)			if err != nil {			term, err = a.eval.MulConst(powers[0], 0)			// Create by adding to x - x (a zero ciphertext would be better)			// Constant term: c0 * 1		if k == 0 {		var term *rlwe.Ciphertext		}			continue		if math.Abs(c) < 1e-15 {	for k, c := range coeffs {	var sum *rlwe.Ciphertext	// For now, assume x contains values and we build from there	// Re-do: create result from c0 * 1 (we need a constant ciphertext)	// Actually, let's be more careful...	// Now add back 1*x and subtract x to get just constant	}		return nil, fmt.Errorf("failed to add constant term: %w", err)	if err != nil {	result, err := a.eval.AddConst(powers[0], complex(coeffs[0]-1, 0))	// Start with constant term	}		return nil, fmt.Errorf("no coefficients provided")	if len(coeffs) == 0 {func (a *ApproxOps) evaluatePolynomial(powers []*rlwe.Ciphertext, coeffs []float64) (*rlwe.Ciphertext, error) {// evaluatePolynomial evaluates Σ c_k * x^k using the power cache}	return powers, nil	}		}			return nil, fmt.Errorf("failed to compute x^%d: %w", i+1, err)		if err != nil {		}			powers[i], err = a.eval.Mul(powers[i-1], x)			// x^i = x^(i-1) * x		} else {			powers[i], err = a.eval.Mul(powers[half-1], powers[half-1])			half := i / 2			// x^i = (x^(i/2))²		if i%2 == 0 {	for i := 2; i < n; i++ {	// Build higher powers efficiently	}		return nil, fmt.Errorf("failed to compute x²: %w", err)	if err != nil {	powers[1], err = a.eval.Mul(x, x)	var err error	// x²	}		return powers, nil	if n == 1 {	powers[0] = x	powers := make([]*rlwe.Ciphertext, n)	}		return nil, fmt.Errorf("n must be positive")	if n <= 0 {func (a *ApproxOps) buildPowerCache(x *rlwe.Ciphertext, n int) ([]*rlwe.Ciphertext, error) {// buildPowerCache builds {x, x², x³, ..., x^n}}	return result, nil	}		return nil, fmt.Errorf("failed to compute filter: %w", err)	if err != nil {	result, err := a.eval.Sub(term1, term2)	// 4s³ - 3s⁴	}		return nil, fmt.Errorf("failed to compute 3s⁴: %w", err)	if err != nil {	term2, err := a.eval.MulConst(s4, 3)	// 3s⁴	}		return nil, fmt.Errorf("failed to compute 4s³: %w", err)	if err != nil {	term1, err := a.eval.MulConst(s3, 4)	// 4s³	}		return nil, fmt.Errorf("failed to compute s⁴: %w", err)	if err != nil {	s4, err := a.eval.Mul(s2, s2)	// s⁴	}		return nil, fmt.Errorf("failed to compute s³: %w", err)	if err != nil {	s3, err := a.eval.Mul(s2, s)	// s³	}		return nil, fmt.Errorf("failed to compute s²: %w", err)	if err != nil {	s2, err := a.eval.Mul(s, s)	// s²func (a *ApproxOps) applyFilter(s *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {// applyFilter applies the sharpening filter p(s) = 4s³ - 3s⁴}	return product, nil	}		scale /= 2		}			return nil, fmt.Errorf("failed to multiply at depth %d: %w", k, err)		if err != nil {		product, err = a.eval.Mul(product, cosK)		}			return nil, fmt.Errorf("failed to compute cos at depth %d: %w", k, err)		if err != nil {		cosK, err := a.evaluateCos(scaled, 6)		}			return nil, fmt.Errorf("failed to scale for depth %d: %w", k, err)		if err != nil {		scaled, err := a.eval.MulConst(x, complex(scale, 0))	for k := 2; k <= depth && k <= 4; k++ { // Limit depth for efficiency	scale := 0.25	// Multiply by cos(π*x/4), cos(π*x/8), etc.	product := cosHalf	}		return nil, fmt.Errorf("failed to compute cos(π*x/2): %w", err)	if err != nil {	cosHalf, err := a.evaluateCos(result, 8) // Fewer terms for efficiency	// cos(π * x/2)	}		return nil, fmt.Errorf("failed to scale for sinc: %w", err)	if err != nil {	result, err := a.eval.MulConst(x, complex(0.5, 0))	// Start with cos(π*x/2)	// sinc(π*x) ≈ Π_{k=1}^{depth} cos(π*x/2^k)func (a *ApproxOps) buildSinc(x *rlwe.Ciphertext, depth int) (*rlwe.Ciphertext, error) {// buildSinc builds sinc(π*x) approximation using product formula}	return a.evaluatePolynomial(powers, coeffs)	// Evaluate polynomial using Horner's method variant	}		return nil, fmt.Errorf("failed to build power cache: %w", err)	if err != nil {	powers, err := a.buildPowerCache(x, numTerms)	// Build power cache: x², x³, x⁴, ...	coeffs := getCosCoefficients(numTerms)	// cos(πx) = Σ c_k * T_k(x) where T_k is Chebyshev polynomial	// Chebyshev coefficients for cos(π*x) on [-1, 1]func (a *ApproxOps) evaluateCos(x *rlwe.Ciphertext, numTerms int) (*rlwe.Ciphertext, error) {// x should be in [-1, 1]// evaluateCos computes cos(π*x) using Chebyshev polynomial approximation}	return result, nil	}		return nil, fmt.Errorf("failed to combine with cos: %w", err)	if err != nil {	result, err = a.eval.Mul(result, cosVal)	// Also multiply by cos result for additional sharpness	}		}			return nil, fmt.Errorf("failed to apply filter iteration %d: %w", i, err)		if err != nil {		result, err = a.applyFilter(result)	for i := 0; i < config.FilterIter; i++ {	// This pushes values close to 1 toward 1, and values close to 0 toward 0	// Step 3: Apply sharpening filter p(s) = 4s³ - 3s⁴	result := sincVal	// The final indicator is approximately sincVal	// Combine cos and sinc approximations	}		return nil, fmt.Errorf("failed to build sinc: %w", err)	if err != nil {	sincVal, err := a.buildSinc(xNorm, d)	// This is an approximation that works well for integer-checking	// sinc(θ) = Π_{k=1}^{K} cos(θ/2^k) for small θ	// Build sinc using repeated double-angle formula	}		return nil, fmt.Errorf("failed to evaluate cos: %w", err)	if err != nil {	cosVal, err := a.evaluateCos(xNorm, config.K)	// cos(πθ) where θ = x' ∈ [-1, 1]	// Compute cos(π*x') using Chebyshev polynomial	// We approximate this using cos and the product formula for sinc	// For integer x, sin(π*x) = 0 except when x=0 where sinc(0)=1	// Step 2: Compute sinc(π*x') ≈ sin(π*x')/(π*x')	}		return nil, fmt.Errorf("failed to normalize x: %w", err)	if err != nil {	xNorm, err := a.eval.MulConst(x, complex(normFactor, 0))	// x' = x / 2^d	normFactor := 1.0 / float64(int(1)<<d) // 1 / 2^d	d := int(math.Ceil(math.Log2(float64(config.MaxCategory))))	// d = ceil(log2(S_f))	// Step 1: Normalize x to [-1, 1] range	}		}			config.FilterIter = cfg.FilterIter		if cfg.FilterIter > 0 {		}			config.K = cfg.K		if cfg.K > 0 {		}			config.MaxCategory = cfg.MaxCategory		if cfg.MaxCategory > 0 {	if cfg != nil {	config := DefaultDiscreteEqualZeroConfig(16)func (a *ApproxOps) DiscreteEqualZero(x *rlwe.Ciphertext, cfg *DiscreteEqualZeroConfig) (*rlwe.Ciphertext, error) {// 3. Apply filter p(s) = 4s³ - 3s⁴ to sharpen the spike// 2. Evaluate sinc(π*x') using Chebyshev approximation of cos// 1. Normalize: x' = x / 2^d where d = ceil(log2(S_f))// Algorithm://// Uses sinc-based approximation with Chebyshev polynomials.// Returns ~1 if x is close to 0 (integer), ~0 otherwise.// DiscreteEqualZero approximates an indicator function:}	}		FilterIter:  2,  // 2 filter iterations		K:           16, // 16 Chebyshev terms		MaxCategory: maxCategory,	return DiscreteEqualZeroConfig{func DefaultDiscreteEqualZeroConfig(maxCategory int) DiscreteEqualZeroConfig {// DefaultDiscreteEqualZeroConfig returns default configuration}	FilterIter  int // Number of filter iterations for sharpening	K           int // Number of Chebyshev terms for approximation	MaxCategory int // S_f: maximum category value (determines normalization)type DiscreteEqualZeroConfig struct {// DiscreteEqualZeroConfig configures the DISCRETEEQUALZERO algorithm}	}		slots:   slots,		encoder: encoder,		eval:    eval,	return &ApproxOps{func NewApproxOps(eval *he.Evaluator, encoder *he.Encoder, slots int) *ApproxOps {// NewApproxOps creates a new ApproxOps instance}	slots   int	encoder *he.Encoder	eval    *he.Evaluatortype ApproxOps struct {// ApproxOps provides approximation operations on encrypted data)	"github.com/hkanpak21/lattigostats/pkg/he"	"github.com/tuneinsight/lattigo/v6/core/rlwe"	"math"
+	"math"
+
+	"github.com/hkanpak21/lattigostats/pkg/he"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+)
+
+// ApproxOp provides approximate HE operations
+type ApproxOp struct {
+	eval *he.Evaluator
+}
+
+// NewApproxOp creates a new approximation operations handler
+func NewApproxOp(eval *he.Evaluator) *ApproxOp {
+	return &ApproxOp{eval: eval}
+}
+
+// DEZConfig configures DISCRETEEQUALZERO
+type DEZConfig struct {
+	Sf      int     // Number of categories (determines normalization)
+	K       int     // Precision parameter (number of sinc iterations)
+	FilterP float64 // Filter polynomial exponent
+}
+
+// DefaultDEZConfig returns default DEZ configuration
+func DefaultDEZConfig(Sf int) DEZConfig {
+	d := int(math.Ceil(math.Log2(float64(Sf))))
+	k := 2 * d // heuristic from paper
+	return DEZConfig{
+		Sf:      Sf,
+		K:       k,
+		FilterP: 4, // p(s) = 4s^3 - 3s^4
+	}
+}
+
+// ChebyshevCoeffs stores precomputed Chebyshev coefficients
+type ChebyshevCoeffs struct {
+	Coeffs []float64
+	Degree int
+}
+
+// ComputeCosCoeffs computes Chebyshev coefficients for cos(πx) on [-1,1]
+func ComputeCosCoeffs(degree int) *ChebyshevCoeffs {
+	coeffs := make([]float64, degree+1)
+
+	// cos(πx) Chebyshev expansion
+	// We'll use the truncated Taylor/Chebyshev series
+	// cos(πx) ≈ Σ c_k T_k(x)
+	n := degree + 1
+	for k := 0; k <= degree; k++ {
+		sum := 0.0
+		for j := 0; j < n; j++ {
+			x := math.Cos(math.Pi * (float64(j) + 0.5) / float64(n))
+			fx := math.Cos(math.Pi * x)
+			Tk := math.Cos(float64(k) * math.Acos(x))
+			sum += fx * Tk
+		}
+		coeffs[k] = 2.0 * sum / float64(n)
+		if k == 0 {
+			coeffs[k] /= 2.0
+		}
+	}
+
+	return &ChebyshevCoeffs{Coeffs: coeffs, Degree: degree}
+}
+
+// ComputeSincCoeffs computes Chebyshev coefficients for sinc(x) = sin(πx)/(πx)
+func ComputeSincCoeffs(degree int) *ChebyshevCoeffs {
+	coeffs := make([]float64, degree+1)
+
+	n := degree + 1
+	for k := 0; k <= degree; k++ {
+		sum := 0.0
+		for j := 0; j < n; j++ {
+			x := math.Cos(math.Pi * (float64(j) + 0.5) / float64(n))
+			var fx float64
+			if math.Abs(x) < 1e-10 {
+				fx = 1.0 // sinc(0) = 1
+			} else {
+				fx = math.Sin(math.Pi*x) / (math.Pi * x)
+			}
+			Tk := math.Cos(float64(k) * math.Acos(x))
+			sum += fx * Tk
+		}
+		coeffs[k] = 2.0 * sum / float64(n)
+		if k == 0 {
+			coeffs[k] /= 2.0
+		}
+	}
+
+	return &ChebyshevCoeffs{Coeffs: coeffs, Degree: degree}
+}
+
+// EvaluateChebyshev evaluates a Chebyshev polynomial on a ciphertext
+// Uses standard polynomial form converted from Chebyshev coefficients
+func (a *ApproxOp) EvaluateChebyshev(x *rlwe.Ciphertext, coeffs *ChebyshevCoeffs) (*rlwe.Ciphertext, error) {
+	if coeffs.Degree == 0 {
+		return a.eval.AddConst(x, complex(coeffs.Coeffs[0], 0))
+	}
+
+	// Build power cache: x^1, x^2, ..., x^degree using binary powering
+	powers := make([]*rlwe.Ciphertext, coeffs.Degree+1)
+	powers[1] = x.CopyNew()
+
+	for i := 2; i <= coeffs.Degree; i++ {
+		var err error
+		if i%2 == 0 {
+			// x^i = x^(i/2) * x^(i/2)
+			half := i / 2
+			powers[i], err = a.eval.Mul(powers[half], powers[half])
+			if err != nil {
+				return nil, fmt.Errorf("power %d mul failed: %w", i, err)
+			}
+		} else {
+			// x^i = x^(i-1) * x
+			powers[i], err = a.eval.Mul(powers[i-1], powers[1])
+			if err != nil {
+				return nil, fmt.Errorf("power %d mul failed: %w", i, err)
+			}
+		}
+		powers[i], err = a.eval.Rescale(powers[i])
+		if err != nil {
+			return nil, fmt.Errorf("power %d rescale failed: %w", i, err)
+		}
+
+		// Bootstrap if needed
+		powers[i], err = a.eval.MaybeBootstrap(powers[i])
+		if err != nil {
+			return nil, fmt.Errorf("power %d bootstrap failed: %w", i, err)
+		}
+	}
+
+	// Convert Chebyshev to standard polynomial form
+	stdCoeffs := chebyshevToStandard(coeffs.Coeffs)
+
+	// Evaluate: c_0 + c_1*x + c_2*x^2 + ...
+	// Start with c_1*x (first non-constant term)
+	var result *rlwe.Ciphertext
+	for k := 1; k < len(stdCoeffs); k++ {
+		if math.Abs(stdCoeffs[k]) < 1e-15 {
+			continue
+		}
+		term, err := a.eval.MulConst(powers[k], complex(stdCoeffs[k], 0))
+		if err != nil {
+			return nil, fmt.Errorf("term %d mul const failed: %w", k, err)
+		}
+
+		if result == nil {
+			result = term
+		} else {
+			err = a.eval.AddInPlace(result, term)
+			if err != nil {
+				return nil, fmt.Errorf("term %d add failed: %w", k, err)
+			}
+		}
+	}
+
+	// Add constant term c_0
+	if result == nil {
+		// No non-constant terms, just return constant
+		return a.eval.AddConst(x, complex(stdCoeffs[0]-1, 0))
+	}
+	return a.eval.AddConst(result, complex(stdCoeffs[0], 0))
+}
+
+// chebyshevToStandard converts Chebyshev coefficients to standard polynomial
+func chebyshevToStandard(cheb []float64) []float64 {
+	n := len(cheb)
+	if n == 0 {
+		return []float64{}
+	}
+
+	// T_0 = 1
+	// T_1 = x
+	// T_n = 2xT_{n-1} - T_{n-2}
+	// Build matrix and solve
+
+	std := make([]float64, n)
+
+	// Simple approach: use recursion for T_k
+	// T_k expressed in x^j coefficients
+	T := make([][]float64, n)
+	for k := range T {
+		T[k] = make([]float64, n)
+	}
+
+	// T_0 = 1
+	T[0][0] = 1
+	if n > 1 {
+		// T_1 = x
+		T[1][1] = 1
+	}
+
+	// T_k = 2x*T_{k-1} - T_{k-2}
+	for k := 2; k < n; k++ {
+		for j := 0; j < n; j++ {
+			if j > 0 {
+				T[k][j] += 2 * T[k-1][j-1]
+			}
+			T[k][j] -= T[k-2][j]
+		}
+	}
+
+	// std = Σ cheb[k] * T[k]
+	for k := 0; k < n; k++ {
+		for j := 0; j < n; j++ {
+			std[j] += cheb[k] * T[k][j]
+		}
+	}
+
+	return std
+}
+
+// DISCRETEEQUALZERO computes an indicator function: ~1 if x==0 (integer), ~0 otherwise
+// Based on the paper's sinc-based approach with filtering
+func (a *ApproxOp) DISCRETEEQUALZERO(x *rlwe.Ciphertext, config DEZConfig) (*rlwe.Ciphertext, error) {
+	// Step 1: Normalize x -> x / 2^d where d = ceil(log2(Sf))
+	d := int(math.Ceil(math.Log2(float64(config.Sf))))
+	scale := 1.0 / math.Pow(2, float64(d))
+
+	normalized, err := a.eval.MulConst(x, complex(scale, 0))
+	if err != nil {
+		return nil, fmt.Errorf("normalize failed: %w", err)
+	}
+
+	// Bootstrap before expensive computation
+	normalized, err = a.eval.MaybeBootstrap(normalized)
+	if err != nil {
+		return nil, fmt.Errorf("normalize bootstrap failed: %w", err)
+	}
+
+	// Step 2: Compute sinc approximation using cos double-angle recursion
+	// sinc(x) = sin(πx)/(πx) ≈ product of cos terms via double-angle
+	// Or use Chebyshev approximation directly
+
+	// For simplicity, use Chebyshev polynomial approximation of sinc
+	sincCoeffs := ComputeSincCoeffs(16) // degree 16 approximation
+
+	sinc, err := a.EvaluateChebyshev(normalized, sincCoeffs)
+	if err != nil {
+		return nil, fmt.Errorf("sinc eval failed: %w", err)
+	}
+
+	// Step 3: Apply sinc^K to sharpen the peak
+	result := sinc
+	for i := 1; i < config.K; i++ {
+		result, err = a.eval.Mul(result, sinc)
+		if err != nil {
+			return nil, fmt.Errorf("sinc^%d mul failed: %w", i+1, err)
+		}
+		result, err = a.eval.Rescale(result)
+		if err != nil {
+			return nil, fmt.Errorf("sinc^%d rescale failed: %w", i+1, err)
+		}
+		result, err = a.eval.MaybeBootstrap(result)
+		if err != nil {
+			return nil, fmt.Errorf("sinc^%d bootstrap failed: %w", i+1, err)
+		}
+	}
+
+	// Step 4: Apply filter polynomial p(s) = 4s^3 - 3s^4 to map to [0,1]
+	// This sharpens the indicator
+	result, err = a.ApplyFilterPolynomial(result)
+	if err != nil {
+		return nil, fmt.Errorf("filter failed: %w", err)
+	}
+
+	return result, nil
+}
+
+// ApplyFilterPolynomial applies p(s) = 4s^3 - 3s^4
+func (a *ApproxOp) ApplyFilterPolynomial(s *rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	// p(s) = 4s^3 - 3s^4 = s^3 * (4 - 3s)
+
+	// Compute s^2
+	s2, err := a.eval.Mul(s, s)
+	if err != nil {
+		return nil, fmt.Errorf("s^2 failed: %w", err)
+	}
+	s2, err = a.eval.Rescale(s2)
+	if err != nil {
+		return nil, fmt.Errorf("s^2 rescale failed: %w", err)
+	}
+
+	// Compute s^3 = s^2 * s
+	s3, err := a.eval.Mul(s2, s)
+	if err != nil {
+		return nil, fmt.Errorf("s^3 failed: %w", err)
+	}
+	s3, err = a.eval.Rescale(s3)
+	if err != nil {
+		return nil, fmt.Errorf("s^3 rescale failed: %w", err)
+	}
+
+	// Compute 4 - 3s
+	neg3s, err := a.eval.MulConst(s, complex(-3, 0))
+	if err != nil {
+		return nil, fmt.Errorf("-3s failed: %w", err)
+	}
+	fourMinus3s, err := a.eval.AddConst(neg3s, complex(4, 0))
+	if err != nil {
+		return nil, fmt.Errorf("4-3s failed: %w", err)
+	}
+
+	// Result = s^3 * (4 - 3s)
+	result, err := a.eval.Mul(s3, fourMinus3s)
+	if err != nil {
+		return nil, fmt.Errorf("final mul failed: %w", err)
+	}
+	return a.eval.Rescale(result)
+}
+
+// ApproxSignConfig configures the approximate sign function
+type ApproxSignConfig struct {
+	Degree     int // Polynomial degree for approximation
+	Iterations int // Refinement iterations
+}
+
+// DefaultApproxSignConfig returns default APPROXSIGN configuration
+func DefaultApproxSignConfig() ApproxSignConfig {
+	return ApproxSignConfig{
+		Degree:     15,
+		Iterations: 3,
+	}
+}
+
+// APPROXSIGN computes an approximate sign function
+// Returns ~-1 for x < 0, ~0 for x ≈ 0, ~+1 for x > 0
+func (a *ApproxOp) APPROXSIGN(x *rlwe.Ciphertext, config ApproxSignConfig) (*rlwe.Ciphertext, error) {
+	// Use polynomial approximation of sign function
+	// A common approach: iterate s <- s * (3 - s^2) / 2 starting from x/||x||
+
+	// For bounded input [-1, 1], we can use Chebyshev approximation of sign
+	result := x.CopyNew()
+
+	// Iterative refinement: s_{n+1} = s_n * (3 - s_n^2) / 2
+	for i := 0; i < config.Iterations; i++ {
+		// s^2
+		s2, err := a.eval.Mul(result, result)
+		if err != nil {
+			return nil, fmt.Errorf("iter %d s^2 failed: %w", i, err)
+		}
+		s2, err = a.eval.Rescale(s2)
+		if err != nil {
+			return nil, fmt.Errorf("iter %d s^2 rescale failed: %w", i, err)
+		}
+
+		// 3 - s^2
+		threeMinusS2, err := a.eval.MulConst(s2, complex(-1, 0))
+		if err != nil {
+			return nil, fmt.Errorf("iter %d -s^2 failed: %w", i, err)
+		}
+		threeMinusS2, err = a.eval.AddConst(threeMinusS2, complex(3, 0))
+		if err != nil {
+			return nil, fmt.Errorf("iter %d 3-s^2 failed: %w", i, err)
+		}
+
+		// s * (3 - s^2)
+		result, err = a.eval.Mul(result, threeMinusS2)
+		if err != nil {
+			return nil, fmt.Errorf("iter %d mul failed: %w", i, err)
+		}
+		result, err = a.eval.Rescale(result)
+		if err != nil {
+			return nil, fmt.Errorf("iter %d rescale failed: %w", i, err)
+		}
+
+		// / 2
+		result, err = a.eval.MulConst(result, complex(0.5, 0))
+		if err != nil {
+			return nil, fmt.Errorf("iter %d /2 failed: %w", i, err)
+		}
+
+		// Bootstrap if needed
+		result, err = a.eval.MaybeBootstrap(result)
+		if err != nil {
+			return nil, fmt.Errorf("iter %d bootstrap failed: %w", i, err)
+		}
+	}
+
+	return result, nil
+}
+
+// COMP computes approximate comparison: returns ~1 if x1 > x2, ~0.5 if equal, ~0 otherwise
+func (a *ApproxOp) COMP(x1, x2 *rlwe.Ciphertext, config ApproxSignConfig) (*rlwe.Ciphertext, error) {
+	// diff = x1 - x2
+	diff, err := a.eval.Sub(x1, x2)
+	if err != nil {
+		return nil, fmt.Errorf("diff failed: %w", err)
+	}
+
+	// sign(diff): -1, 0, or 1
+	sign, err := a.APPROXSIGN(diff, config)
+	if err != nil {
+		return nil, fmt.Errorf("approxsign failed: %w", err)
+	}
+
+	// Map to [0, 1]: (sign + 1) / 2
+	result, err := a.eval.AddConst(sign, complex(1, 0))
+	if err != nil {
+		return nil, fmt.Errorf("shift failed: %w", err)
+	}
+	result, err = a.eval.MulConst(result, complex(0.5, 0))
+	if err != nil {
+		return nil, fmt.Errorf("scale failed: %w", err)
+	}
+
+	return result, nil
+}
+
+// TableLookup selects rows where categorical == value using DISCRETEEQUALZERO
+func (a *ApproxOp) TableLookup(
+	catBlocks []*rlwe.Ciphertext,
+	value int,
+	targetBlocks []*rlwe.Ciphertext,
+	config DEZConfig,
+) ([]*rlwe.Ciphertext, error) {
+	results := make([]*rlwe.Ciphertext, len(catBlocks))
+
+	for i := range catBlocks {
+		// Compute cat - value
+		shifted, err := a.eval.AddConst(catBlocks[i], complex(float64(-value), 0))
+		if err != nil {
+			return nil, fmt.Errorf("block %d shift failed: %w", i, err)
+		}
+
+		// Compute equality indicator
+		eq, err := a.DISCRETEEQUALZERO(shifted, config)
+		if err != nil {
+			return nil, fmt.Errorf("block %d DEZ failed: %w", i, err)
+		}
+
+		// Multiply by target
+		results[i], err = a.eval.Mul(eq, targetBlocks[i])
+		if err != nil {
+			return nil, fmt.Errorf("block %d mul failed: %w", i, err)
+		}
+		results[i], err = a.eval.Rescale(results[i])
+		if err != nil {
+			return nil, fmt.Errorf("block %d rescale failed: %w", i, err)
+		}
+	}
+
+	return results, nil
+}
+
+// PlaintextDEZ computes discrete equality to zero (for validation)
+func PlaintextDEZ(x float64, Sf int) float64 {
+	// Returns 1 if x rounds to 0, 0 otherwise
+	if math.Abs(x) < 0.5 {
+		return 1.0
+	}
+	return 0.0
+}
+
+// PlaintextSign computes sign function (for validation)
+func PlaintextSign(x float64) float64 {
+	if x > 0 {
+		return 1.0
+	} else if x < 0 {
+		return -1.0
+	}
+	return 0.0
+}

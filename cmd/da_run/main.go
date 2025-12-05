@@ -1,189 +1,323 @@
-package darun
-// Command da_run executes statistical jobs on encrypted data.
+// DA Run - Data Analyst Job Runner
+// This tool executes statistical jobs on encrypted tables.
 package main
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}	fmt.Println("\nSend the result to DDIA for decryption and privacy inspection")	}		fmt.Println("Note: Use -output to save the encrypted result")	} else {		fmt.Printf("Result saved to: %s\n", *outputFile)		}			log.Fatalf("Failed to write result: %v", err)		if err := os.WriteFile(*outputFile, data, 0644); err != nil {		}			log.Fatalf("Failed to marshal result: %v", err)		if err != nil {		data, err := result.Ciphertext.MarshalBinary()	if *outputFile != "" {	// Save result	fmt.Printf("Statistics: %s\n", result.Stats)	fmt.Printf("\nJob completed successfully!\n")	}		log.Fatalf("Job execution failed: %v", err)	if err != nil {	result, err := executor.Execute(spec, tableData)	executor := jobs.NewJobExecutor(eval, encoder, profile.Slots)	// Execute job	}		}			tableData.BMVSets[colName] = bmvSet			}				bmvSet[cat] = catBlocks				}					}						catBlocks[blockIdx] = bmvCt						}							continue							log.Printf("Warning: failed to read BMV for %s cat %d block %d: %v", colName, cat, blockIdx, err)						if err != nil {						bmvCt, err := ts.ReadBMV(colName, cat, blockIdx)					if ts.BMVExists(colName, cat, blockIdx) {				for blockIdx := 0; blockIdx < ts.Metadata.BlockCount; blockIdx++ {				catBlocks := make([]*rlwe.Ciphertext, ts.Metadata.BlockCount)			for cat := 1; cat <= col.CategoryCount; cat++ {			bmvSet := make(categorical.BMVSet)		if col != nil && (col.Type == "categorical" || col.Type == "ordinal") {		col := ts.Metadata.Schema.GetColumn(colName)		// Check if we need BMVs		tableData.ValidityBlocks[colName] = validity		tableData.ColumnBlocks[colName] = blocks		}			validity[blockIdx] = vct			}				log.Fatalf("Failed to read validity block %d of %s: %v", blockIdx, colName, err)			if err != nil {			vct, err := ts.ReadValidity(colName, blockIdx)			blocks[blockIdx] = ct			}				log.Fatalf("Failed to read block %d of %s: %v", blockIdx, colName, err)			if err != nil {			ct, err := ts.ReadBlock(colName, blockIdx)		for blockIdx := 0; blockIdx < ts.Metadata.BlockCount; blockIdx++ {		validity := make([]*rlwe.Ciphertext, ts.Metadata.BlockCount)		blocks := make([]*rlwe.Ciphertext, ts.Metadata.BlockCount)				fmt.Printf("Loading column: %s\n", colName)	for colName := range neededCols {	// Load column blocks	}		neededCols[cond.Column] = true	for _, cond := range spec.Conditions {	}		neededCols[spec.Target] = true	if spec.Target != "" {	}		neededCols[col] = true	for _, col := range spec.Columns {	neededCols := make(map[string]bool)	// Determine which columns we need	}		BMVSets:        make(map[string]categorical.BMVSet),		ValidityBlocks: make(map[string][]*rlwe.Ciphertext),		ColumnBlocks:   make(map[string][]*rlwe.Ciphertext),		Metadata:       ts.Metadata,	tableData := &jobs.TableData{	// Load required data from storage	encoder := he.NewEncoder(profile.Params)	eval := he.NewEvaluator(evalCfg)	}		EvalKey: evalKeySet,		Params:  profile.Params,	evalCfg := he.EvaluatorConfig{	// Create evaluator		ts.Metadata.Schema.Name, ts.Metadata.RowCount, ts.Metadata.BlockCount)	fmt.Printf("Opened table: %s (%d rows, %d blocks)\n", 	}		log.Fatalf("Failed to open table storage: %v", err)	if err != nil {	ts, err := storage.OpenTableStorage(*tableDir, profile.Params)	// Open encrypted table	}		log.Fatalf("Failed to unmarshal evaluation keys: %v", err)	if err := evalKeySet.UnmarshalBinary(evalData); err != nil {	evalKeySet := new(rlwe.MemEvaluationKeySet)	}		log.Fatalf("Failed to read evaluation keys: %v", err)	if err != nil {	evalData, err := os.ReadFile(evalPath)	evalPath := filepath.Join(*keyDir, "eval.key")	// Load evaluation keys	fmt.Printf("Using profile: %s\n", profile)	}		log.Fatalf("Failed to create profile: %v", err)	if err != nil {	}		log.Fatalf("Unknown profile: %s", paramsMeta.Profile)	default:		profile, err = params.NewProfileB()	case "B":		profile, err = params.NewProfileA()	case "A":	switch paramsMeta.Profile {	var profile *params.Profile	}		log.Fatalf("Failed to parse params: %v", err)	if err := json.Unmarshal(paramsData, &paramsMeta); err != nil {	}		Profile string `json:"profile"`	var paramsMeta struct {	}		log.Fatalf("Failed to read params: %v", err)	if err != nil {	paramsData, err := os.ReadFile(paramsPath)	paramsPath := filepath.Join(*keyDir, "params.json")	// Load params	fmt.Printf("Loaded job: %s (%s)\n", spec.ID, spec.Operation)	}		log.Fatalf("Failed to load job spec: %v", err)	if err != nil {	spec, err := jobs.LoadJobSpec(*jobFile)	// Load job spec	}		os.Exit(1)		fs.PrintDefaults()		fmt.Fprintln(os.Stderr, "Error: -job and -table are required")	if *jobFile == "" || *tableDir == "" {	fs.Parse(os.Args[1:])	outputFile := fs.String("output", "", "Output file for encrypted result")	keyDir := fs.String("keys", "./keys", "Directory containing evaluation keys and params")	tableDir := fs.String("table", "", "Encrypted table directory")	jobFile := fs.String("job", "", "Job specification file (JSON)")	fs := flag.NewFlagSet("da_run", flag.ExitOnError)func main() {)	"github.com/hkanpak21/lattigostats/pkg/storage"	"github.com/hkanpak21/lattigostats/pkg/params"	"github.com/hkanpak21/lattigostats/pkg/ops/categorical"	"github.com/hkanpak21/lattigostats/pkg/jobs"	"github.com/hkanpak21/lattigostats/pkg/he"	"github.com/tuneinsight/lattigo/v6/core/rlwe"	"path/filepath"	"os"	"log"	"fmt"	"flag"	"encoding/json"import (
+import (
+	"encoding/json"
+	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/hkanpak21/lattigostats/pkg/he"
+	"github.com/hkanpak21/lattigostats/pkg/jobs"
+	"github.com/hkanpak21/lattigostats/pkg/ops/categorical"
+	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"
+	"github.com/hkanpak21/lattigostats/pkg/params"
+	"github.com/hkanpak21/lattigostats/pkg/schema"
+	"github.com/hkanpak21/lattigostats/pkg/storage"
+	"github.com/tuneinsight/lattigo/v6/core/rlwe"
+)
+
+func main() {
+	jobPath := flag.String("job", "", "Path to job spec JSON")
+	tablePath := flag.String("table", "", "Path to encrypted table directory")
+	keysPath := flag.String("keys", "", "Path to evaluation keys directory")
+	outputPath := flag.String("output", "./result", "Output directory for result")
+	profile := flag.String("profile", "A", "Parameter profile")
+	flag.Parse()
+
+	if *jobPath == "" || *tablePath == "" || *keysPath == "" {
+		fmt.Fprintln(os.Stderr, "Usage: da_run -job <job.json> -table <table_dir> -keys <keys_dir>")
+		os.Exit(1)
+	}
+
+	startTime := time.Now()
+
+	// Load parameters
+	var prof *params.Profile
+	var err error
+	switch *profile {
+	case "A":
+		prof, err = params.NewProfileA()
+	case "B":
+		prof, err = params.NewProfileB()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown profile: %s\n", *profile)
+		os.Exit(1)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create parameters: %v\n", err)
+		os.Exit(1)
+	}
+	p := prof.Params
+
+	// Load job spec
+	job, err := jobs.LoadJobSpec(*jobPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load job: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Job: %s (%s)\n", job.ID, job.Operation)
+
+	// Load table
+	store, err := storage.OpenTableStore(*tablePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open table: %v\n", err)
+		os.Exit(1)
+	}
+
+	metaPath := filepath.Join(*tablePath, "metadata.json")
+	meta, err := schema.LoadMetadataFromFile(metaPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load metadata: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Table: %s (%d rows, %d blocks)\n", meta.Schema.Name, meta.RowCount, meta.BlockCount)
+
+	// Load evaluation keys
+	fmt.Println("Loading evaluation keys...")
+	rlkPath := filepath.Join(*keysPath, "relin.key")
+	rlkData, err := os.ReadFile(rlkPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read relin key: %v\n", err)
+		os.Exit(1)
+	}
+	rlk := new(rlwe.RelinearizationKey)
+	if err := rlk.UnmarshalBinary(rlkData); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse relin key: %v\n", err)
+		os.Exit(1)
+	}
+
+	galksPath := filepath.Join(*keysPath, "galois.key")
+	galksData, err := os.ReadFile(galksPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read Galois keys: %v\n", err)
+		os.Exit(1)
+	}
+	galks := new(rlwe.GaloisKey)
+	if err := galks.UnmarshalBinary(galksData); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse Galois keys: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create evaluation key set
+	evk := rlwe.NewMemEvaluationKeySet(rlk, galks)
+
+	// Create evaluator
+	eval, err := he.NewEvaluator(p, evk, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create evaluator: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Execute job
+	fmt.Println("Executing job...")
+	var result *rlwe.Ciphertext
+
+	switch job.Operation {
+	case jobs.OpMean, jobs.OpVariance, jobs.OpStdev:
+		result, err = runNumericOp(eval, store, meta, job)
+	case jobs.OpCorr:
+		result, err = runCorrelation(eval, store, meta, job)
+	case jobs.OpBc, jobs.OpBa, jobs.OpBv:
+		result, err = runBinOp(eval, store, meta, job)
+	default:
+		fmt.Fprintf(os.Stderr, "Operation %s not yet implemented\n", job.Operation)
+		os.Exit(1)
+	}
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Job execution failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Save result
+	if err := os.MkdirAll(*outputPath, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create output directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	resultPath := filepath.Join(*outputPath, "result.ct")
+	if err := storage.SaveCiphertext(resultPath, result); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save result: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Save job result metadata
+	jobResult := &jobs.JobResult{
+		JobID:      job.ID,
+		Operation:  string(job.Operation),
+		ResultPath: resultPath,
+		Metadata: map[string]interface{}{
+			"execution_time": time.Since(startTime).String(),
+			"level":          result.Level(),
+		},
+	}
+
+	resultMetaPath := filepath.Join(*outputPath, "result.json")
+	f, _ := os.Create(resultMetaPath)
+	json.NewEncoder(f).Encode(jobResult)
+	f.Close()
+
+	// Print stats
+	stats := eval.Stats()
+	fmt.Printf("\nExecution complete in %s\n", time.Since(startTime))
+	fmt.Printf("Operations: %d mul, %d add, %d rotate, %d rescale, %d bootstrap\n",
+		stats.MulCount, stats.AddCount, stats.RotateCount, stats.RescaleCount, stats.BootstrapCount)
+	fmt.Printf("Result saved to: %s\n", resultPath)
+}
+
+func runNumericOp(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
+	colName := job.InputColumns[0]
+
+	// Load data blocks
+	fmt.Printf("  Loading %d blocks for column %s...\n", meta.BlockCount, colName)
+	xBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	vBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+
+	for b := 0; b < meta.BlockCount; b++ {
+		var err error
+		xBlocks[b], err = store.LoadBlock(colName, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load block %d: %w", b, err)
+		}
+		vBlocks[b], err = store.LoadValidity(colName, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load validity %d: %w", b, err)
+		}
+	}
+
+	numOp := numeric.NewNumericOp(eval)
+
+	switch job.Operation {
+	case jobs.OpMean:
+		fmt.Println("  Computing mean...")
+		return numOp.Mean(xBlocks, vBlocks)
+	case jobs.OpVariance:
+		fmt.Println("  Computing variance...")
+		return numOp.Variance(xBlocks, vBlocks)
+	case jobs.OpStdev:
+		fmt.Println("  Computing standard deviation...")
+		return numOp.Stdev(xBlocks, vBlocks)
+	default:
+		return nil, fmt.Errorf("unknown numeric operation: %s", job.Operation)
+	}
+}
+
+func runCorrelation(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
+	xCol := job.InputColumns[0]
+	yCol := job.InputColumns[1]
+
+	fmt.Printf("  Loading blocks for columns %s and %s...\n", xCol, yCol)
+	xBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	yBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	vBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+
+	for b := 0; b < meta.BlockCount; b++ {
+		var err error
+		xBlocks[b], err = store.LoadBlock(xCol, b)
+		if err != nil {
+			return nil, err
+		}
+		yBlocks[b], err = store.LoadBlock(yCol, b)
+		if err != nil {
+			return nil, err
+		}
+		// Use X's validity (assume both columns have same validity)
+		vBlocks[b], err = store.LoadValidity(xCol, b)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	numOp := numeric.NewNumericOp(eval)
+	fmt.Println("  Computing correlation...")
+	return numOp.Correlation(xBlocks, yBlocks, vBlocks)
+}
+
+func runBinOp(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
+	// Load validity for target column (or first condition column)
+	var validityCol string
+	if job.TargetColumn != "" {
+		validityCol = job.TargetColumn
+	} else if len(job.Conditions) > 0 {
+		validityCol = job.Conditions[0].Column
+	} else {
+		return nil, fmt.Errorf("no column specified for bin operation")
+	}
+
+	vBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	for b := 0; b < meta.BlockCount; b++ {
+		var err error
+		vBlocks[b], err = store.LoadValidity(validityCol, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load validity: %w", err)
+		}
+	}
+
+	// Create BMV store adapter
+	bmvStore := &bmvStoreAdapter{
+		store:      store,
+		blockCount: meta.BlockCount,
+	}
+
+	// Convert conditions
+	conditions := make([]categorical.Condition, len(job.Conditions))
+	for i, c := range job.Conditions {
+		conditions[i] = categorical.Condition{
+			ColumnName: c.Column,
+			Value:      c.Value,
+		}
+	}
+
+	catOp := categorical.NewCategoricalOp(eval)
+
+	switch job.Operation {
+	case jobs.OpBc:
+		fmt.Println("  Computing bin-count...")
+		return catOp.Bc(vBlocks, conditions, bmvStore)
+
+	case jobs.OpBa:
+		fmt.Printf("  Computing bin-average for %s...\n", job.TargetColumn)
+		targetBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+		for b := 0; b < meta.BlockCount; b++ {
+			var err error
+			targetBlocks[b], err = store.LoadBlock(job.TargetColumn, b)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return catOp.Ba(targetBlocks, vBlocks, conditions, bmvStore)
+
+	case jobs.OpBv:
+		fmt.Printf("  Computing bin-variance for %s...\n", job.TargetColumn)
+		targetBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+		for b := 0; b < meta.BlockCount; b++ {
+			var err error
+			targetBlocks[b], err = store.LoadBlock(job.TargetColumn, b)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return catOp.Bv(targetBlocks, vBlocks, conditions, bmvStore)
+
+	default:
+		return nil, fmt.Errorf("unknown bin operation: %s", job.Operation)
+	}
+}
+
+// bmvStoreAdapter adapts storage.TableStore to categorical.BMVStore
+type bmvStoreAdapter struct {
+	store      *storage.TableStore
+	blockCount int
+}
+
+func (a *bmvStoreAdapter) GetBMV(columnName string, value int, blockIndex int) (*rlwe.Ciphertext, error) {
+	return a.store.LoadBMV(columnName, value, blockIndex)
+}
+
+func (a *bmvStoreAdapter) BlockCount() int {
+	return a.blockCount
+}
