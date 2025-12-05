@@ -54,6 +54,9 @@ type JobSpec struct {
 	// K is the percentile value (0-100)
 	K float64 `json:"k,omitempty"`
 
+	// LookupColumn is the categorical column for table lookup
+	LookupColumn string `json:"lookup_column,omitempty"`
+
 	// LookupValue is the value to look up in table lookup
 	LookupValue int `json:"lookup_value,omitempty"`
 
@@ -105,8 +108,8 @@ func (j *JobSpec) Validate() error {
 			return fmt.Errorf("k must be between 0 and 100")
 		}
 	case OpLookup:
-		if len(j.InputColumns) != 1 {
-			return fmt.Errorf("operation lookup requires exactly one categorical column")
+		if j.LookupColumn == "" {
+			return fmt.Errorf("operation lookup requires a lookup_column")
 		}
 		if j.TargetColumn == "" {
 			return fmt.Errorf("operation lookup requires a target column")
@@ -262,14 +265,56 @@ func PlanJob(job *JobSpec) (*JobPlan, error) {
 	return plan, nil
 }
 
-// Executor executes jobs on encrypted data
-type Executor struct {
-	// Future: add evaluator, storage, etc.
+// ExecutorDeps holds dependencies for job execution
+// This interface decouples jobs package from he/storage/schema packages
+type ExecutorDeps interface {
+	// Execute runs the job and returns the result path or error
+	ExecuteJob(job *JobSpec) (string, error)
 }
 
-// NewExecutor creates a new job executor
-func NewExecutor() *Executor {
-	return &Executor{}
+// Executor executes jobs on encrypted data
+type Executor struct {
+	deps      ExecutorDeps
+	outputDir string
+}
+
+// NewExecutor creates a new job executor with the given dependencies
+func NewExecutor(deps ExecutorDeps, outputDir string) *Executor {
+	return &Executor{
+		deps:      deps,
+		outputDir: outputDir,
+	}
+}
+
+// Execute runs a single job and returns the result metadata
+func (e *Executor) Execute(job *JobSpec) (*JobResult, error) {
+	if err := job.Validate(); err != nil {
+		return nil, fmt.Errorf("job validation failed: %w", err)
+	}
+
+	resultPath, err := e.deps.ExecuteJob(job)
+	if err != nil {
+		return nil, fmt.Errorf("job execution failed: %w", err)
+	}
+
+	return &JobResult{
+		JobID:      job.ID,
+		Operation:  string(job.Operation),
+		ResultPath: resultPath,
+	}, nil
+}
+
+// ExecuteBatch runs multiple jobs and returns all results
+func (e *Executor) ExecuteBatch(batch *BatchJob) ([]*JobResult, error) {
+	results := make([]*JobResult, 0, len(batch.Jobs))
+	for i, job := range batch.Jobs {
+		result, err := e.Execute(job)
+		if err != nil {
+			return results, fmt.Errorf("job %d (%s) failed: %w", i, job.ID, err)
+		}
+		results = append(results, result)
+	}
+	return results, nil
 }
 
 // BatchJob represents a batch of jobs to execute

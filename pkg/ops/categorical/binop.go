@@ -5,6 +5,7 @@ package categorical
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/hkanpak21/lattigostats/pkg/he"
 	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"
@@ -129,16 +130,31 @@ func (c *CategoricalOp) Bv(
 
 // LBcConfig configures Large-Bin-Count computation
 type LBcConfig struct {
-	Delta     int // Δ: bit spacing in PBMV
-	LambdaBig int // Λ: scale factor for BBMV (2^Λ)
+	Delta       int // Δ: bit spacing in PBMV between categories
+	DeltaOffset int // δ: initial bit offset (paper's δ)
+	LambdaBig   int // Λ: scale factor for BBMV (2^Λ)
 }
 
 // DefaultLBcConfig returns default LBc configuration
 func DefaultLBcConfig() LBcConfig {
 	return LBcConfig{
-		Delta:     8,
-		LambdaBig: 10,
+		Delta:       10,
+		DeltaOffset: 10,
+		LambdaBig:   30,
 	}
+}
+
+// ValidateLBcConfig validates the LBc configuration parameters
+func ValidateLBcConfig(config LBcConfig, categories int) error {
+	// Check that the maximum exponent fits in float64 mantissa (52 bits)
+	maxExp := config.DeltaOffset + config.Delta*(categories-1)
+	if maxExp > 52 {
+		return fmt.Errorf("PBMV exponent overflow: δ + Δ*(S-1) = %d > 52 bits", maxExp)
+	}
+	if config.LambdaBig > 52 {
+		return fmt.Errorf("BBMV Λ = %d > 52 bits", config.LambdaBig)
+	}
+	return nil
 }
 
 // PBMVEncoder encodes categorical values using spaced bit-field encoding
@@ -157,24 +173,24 @@ func NewPBMVEncoder(categories, slots int, config LBcConfig) *PBMVEncoder {
 	}
 }
 
-// EncodePBMV encodes a single categorical value into PBMV format
-// Places 1 in position (value-1)*2^Δ and 0 elsewhere
+// EncodePBMV encodes categorical values into PBMV format
+// For category value v ∈ [1..S], slot gets 2^(δ + Δ*(v-1))
+// This creates a one-hot encoding in power-of-two bit positions
 func (p *PBMVEncoder) EncodePBMV(values []int) []float64 {
 	result := make([]float64, p.slots)
-	spacing := 1 << p.config.Delta
 
 	for i, v := range values {
 		if i >= p.slots {
 			break
 		}
-		if v >= 1 && v <= p.categories {
-			// Each category gets a bit position spaced by 2^Δ
-			// This is a simplified version - actual impl needs packed format
-			pos := (v - 1) * spacing
-			if pos < p.slots {
-				result[i] = float64(v)
-			}
+		if v < 1 || v > p.categories {
+			continue // invalid category, leave as 0
 		}
+
+		// PBMV exponent: exp = δ + Δ*(v-1)
+		exp := p.config.DeltaOffset + p.config.Delta*(v-1)
+		// Use math.Ldexp for exact power-of-two representation
+		result[i] = math.Ldexp(1.0, exp)
 	}
 
 	return result
@@ -195,16 +211,35 @@ func NewBBMVEncoder(slots int, config LBcConfig) *BBMVEncoder {
 }
 
 // EncodeBBMV encodes a binary mask with 2^Λ scaling
-// Mask values: 0 or 2^Λ
+// Mask values: 0 or 2^Λ (separates signal from CKKS noise)
 func (b *BBMVEncoder) EncodeBBMV(mask []bool) []float64 {
 	result := make([]float64, b.slots)
-	scale := float64(int(1) << b.config.LambdaBig)
+	scale := math.Ldexp(1.0, b.config.LambdaBig) // 2^Λ
 
 	for i, m := range mask {
 		if i >= b.slots {
 			break
 		}
 		if m {
+			result[i] = scale
+		}
+	}
+
+	return result
+}
+
+// EncodeBBMVForValue encodes a BBMV for rows matching a specific categorical value
+// values: the categorical values for each row
+// want: the category value to match
+func (b *BBMVEncoder) EncodeBBMVForValue(values []int, want int) []float64 {
+	result := make([]float64, b.slots)
+	scale := math.Ldexp(1.0, b.config.LambdaBig)
+
+	for i, v := range values {
+		if i >= b.slots {
+			break
+		}
+		if v == want {
 			result[i] = scale
 		}
 	}

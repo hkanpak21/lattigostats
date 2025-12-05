@@ -20,6 +20,7 @@ func main() {
 	inputsFlag := flag.String("inputs", "", "Comma-separated list of encrypted table directories")
 	outputDir := flag.String("output", "./merged", "Output directory for merged table")
 	macKeyPath := flag.String("mac-key", "", "Path to MAC key file (for token verification)")
+	tokensFlag := flag.String("tokens", "", "Comma-separated list of token files (one per input)")
 	flag.Parse()
 
 	if *inputsFlag == "" {
@@ -121,7 +122,47 @@ func main() {
 	// Real implementation would match by protected identifiers
 	rowCount := allMeta[0].RowCount
 	slots := allMeta[0].Slots
-	_ = allMeta[0].BlockCount // used for verification
+
+	// Check if token files are provided for proper join
+	var tokenFiles []string
+	if *tokensFlag != "" {
+		tokenFiles = splitComma(*tokensFlag)
+	}
+
+	// If token files provided, perform intersection-based join
+	var joinMasks [][]float64
+	if len(tokenFiles) == len(inputs) {
+		fmt.Println("\nPerforming token-based join...")
+		allTokens := make([][]string, len(tokenFiles))
+		for i, tf := range tokenFiles {
+			tokens, err := LoadTokens(tf)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to load tokens from %s: %v\n", tf, err)
+				os.Exit(1)
+			}
+			allTokens[i] = tokens
+			fmt.Printf("  Loaded %d tokens from %s\n", len(tokens), tf)
+		}
+
+		// Compute intersection masks for all tables
+		joinMasks = ComputeJoinMasks(allTokens)
+		validCount := 0
+		for _, m := range joinMasks[0] {
+			if m > 0 {
+				validCount++
+			}
+		}
+		fmt.Printf("  Join intersection: %d rows\n", validCount)
+
+		// Save join masks for DA to apply
+		for i := 0; i < len(inputs); i++ {
+			maskPath := filepath.Join(*outputDir, fmt.Sprintf("join_mask_%d.json", i))
+			if err := SaveJoinMask(maskPath, joinMasks[i], slots); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save join mask %d: %v\n", i, err)
+				os.Exit(1)
+			}
+		}
+	}
 
 	fmt.Printf("\nMerging into table with %d columns, %d rows\n", len(mergedSchema.Columns), rowCount)
 
@@ -252,4 +293,129 @@ func LoadMergeConfig(path string) (*MergeConfig, error) {
 		return nil, err
 	}
 	return &config, nil
+}
+
+// LoadTokens loads protected identifier tokens from a file (one per line)
+func LoadTokens(path string) ([]string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var tokens []string
+	for _, line := range splitLines(string(data)) {
+		if line != "" {
+			tokens = append(tokens, line)
+		}
+	}
+	return tokens, nil
+}
+
+// splitLines splits a string into lines
+func splitLines(s string) []string {
+	var result []string
+	current := ""
+	for _, c := range s {
+		if c == '\n' {
+			result = append(result, current)
+			current = ""
+		} else if c != '\r' {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		result = append(result, current)
+	}
+	return result
+}
+
+// ComputeJoinMasks computes intersection masks for multiple token lists
+// Returns a mask for each table where 1.0 indicates row is in the intersection
+func ComputeJoinMasks(allTokens [][]string) [][]float64 {
+	if len(allTokens) == 0 {
+		return nil
+	}
+
+	// Build a set of tokens that appear in ALL tables
+	intersection := make(map[string]bool)
+	for _, t := range allTokens[0] {
+		intersection[t] = true
+	}
+
+	for i := 1; i < len(allTokens); i++ {
+		nextSet := make(map[string]bool)
+		for _, t := range allTokens[i] {
+			if intersection[t] {
+				nextSet[t] = true
+			}
+		}
+		intersection = nextSet
+	}
+
+	// Create mask for each table
+	masks := make([][]float64, len(allTokens))
+	for i, tokens := range allTokens {
+		mask := make([]float64, len(tokens))
+		for j, t := range tokens {
+			if intersection[t] {
+				mask[j] = 1.0
+			}
+		}
+		masks[i] = mask
+	}
+
+	return masks
+}
+
+// JoinMaskBlocks converts a flat mask to block format for DA processing
+type JoinMaskBlocks struct {
+	Blocks [][]float64 `json:"blocks"`
+	Slots  int         `json:"slots"`
+}
+
+// SaveJoinMask saves join mask blocks to a JSON file
+func SaveJoinMask(path string, mask []float64, slots int) error {
+	numBlocks := (len(mask) + slots - 1) / slots
+	blocks := make([][]float64, numBlocks)
+
+	for b := 0; b < numBlocks; b++ {
+		block := make([]float64, slots)
+		for s := 0; s < slots; s++ {
+			idx := b*slots + s
+			if idx < len(mask) {
+				block[s] = mask[idx]
+			}
+		}
+		blocks[b] = block
+	}
+
+	jmb := JoinMaskBlocks{
+		Blocks: blocks,
+		Slots:  slots,
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(jmb)
+}
+
+// LoadJoinMask loads join mask blocks from a JSON file
+func LoadJoinMask(path string) (*JoinMaskBlocks, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var jmb JoinMaskBlocks
+	if err := json.NewDecoder(f).Decode(&jmb); err != nil {
+		return nil, err
+	}
+	return &jmb, nil
 }

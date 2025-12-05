@@ -48,6 +48,7 @@ type Evaluator struct {
 	params       ckks.Parameters
 	encoder      *ckks.Encoder
 	evaluator    *ckks.Evaluator
+	encryptor    *rlwe.Encryptor // optional: for creating constant ciphertexts
 	bootstrapper *bootstrapping.Evaluator
 	stats        *Stats
 	minLevel     int // minimum level before bootstrap is needed
@@ -394,43 +395,112 @@ func (e *Evaluator) Power(ct *rlwe.Ciphertext, n int) (*rlwe.Ciphertext, error) 
 	return result, nil
 }
 
-// EvaluatePolynomial evaluates a polynomial on a ciphertext
-// coeffs[i] is the coefficient for x^i
+// EvaluatePolynomial evaluates a polynomial on a ciphertext using Horner's method
+// p(x) = coeffs[0] + coeffs[1]*x + coeffs[2]*x^2 + ... + coeffs[n-1]*x^(n-1)
 func (e *Evaluator) EvaluatePolynomial(ct *rlwe.Ciphertext, coeffs []float64) (*rlwe.Ciphertext, error) {
 	if len(coeffs) == 0 {
 		return nil, fmt.Errorf("coefficients cannot be empty")
 	}
 
-	// Use Horner's method
 	n := len(coeffs)
-	result := e.EncodeConstant(complex(coeffs[n-1], 0), ct.Level(), ct.Scale)
 
-	for i := n - 2; i >= 0; i-- {
-		// result = result * ct + coeffs[i]
-		resultCt := ckks.NewCiphertext(e.params, 1, ct.Level())
-		err := e.evaluator.Mul(ct, result, resultCt)
-		if err != nil {
-			return nil, fmt.Errorf("polynomial mul failed: %w", err)
+	// Degree 0: return constant ciphertext (ct * 0 + c_0)
+	if n == 1 {
+		// Create a "zero ciphertext" by multiplying ct by 0 and adding constant
+		result := ct.CopyNew()
+		if err := e.evaluator.Mul(result, complex(0, 0), result); err != nil {
+			return nil, fmt.Errorf("zero mul failed: %w", err)
 		}
-		err = e.evaluator.Rescale(resultCt, resultCt)
-		if err != nil {
-			return nil, fmt.Errorf("polynomial rescale failed: %w", err)
+		if err := e.evaluator.Add(result, complex(coeffs[0], 0), result); err != nil {
+			return nil, fmt.Errorf("constant add failed: %w", err)
 		}
-		err = e.evaluator.Add(resultCt, complex(coeffs[i], 0), resultCt)
-		if err != nil {
-			return nil, fmt.Errorf("polynomial add failed: %w", err)
-		}
-		// Store intermediate for next iteration if needed
-		if i > 0 {
-			result = e.EncodeConstant(0, resultCt.Level(), resultCt.Scale)
-			// Copy the ciphertext values back appropriately
-		}
-		if i == 0 {
-			return resultCt, nil
-		}
+		return result, nil
 	}
 
-	return nil, fmt.Errorf("polynomial evaluation failed")
+	// Horner's method: p(x) = c_0 + x*(c_1 + x*(c_2 + ... + x*c_{n-1})...)
+	// Start with result = c_{n-1}
+	result := ct.CopyNew()
+	if err := e.evaluator.Mul(result, complex(0, 0), result); err != nil {
+		return nil, fmt.Errorf("init zero failed: %w", err)
+	}
+	if err := e.evaluator.Add(result, complex(coeffs[n-1], 0), result); err != nil {
+		return nil, fmt.Errorf("init constant failed: %w", err)
+	}
+
+	// Iterate: result = result * x + c_i
+	for i := n - 2; i >= 0; i-- {
+		start := time.Now()
+
+		// result = result * ct
+		tmp, err := e.evaluator.MulRelinNew(result, ct)
+		if err != nil {
+			return nil, fmt.Errorf("polynomial mul at degree %d failed: %w", i, err)
+		}
+
+		e.stats.mu.Lock()
+		e.stats.MulCount++
+		e.stats.MulTime += time.Since(start)
+		e.stats.mu.Unlock()
+
+		// Rescale
+		start = time.Now()
+		if err := e.evaluator.Rescale(tmp, tmp); err != nil {
+			return nil, fmt.Errorf("polynomial rescale at degree %d failed: %w", i, err)
+		}
+
+		e.stats.mu.Lock()
+		e.stats.RescaleCount++
+		e.stats.RescaleTime += time.Since(start)
+		e.stats.mu.Unlock()
+
+		// result = tmp + c_i
+		start = time.Now()
+		if err := e.evaluator.Add(tmp, complex(coeffs[i], 0), tmp); err != nil {
+			return nil, fmt.Errorf("polynomial add at degree %d failed: %w", i, err)
+		}
+
+		e.stats.mu.Lock()
+		e.stats.AddCount++
+		e.stats.AddTime += time.Since(start)
+		e.stats.mu.Unlock()
+
+		result = tmp
+	}
+
+	return result, nil
+}
+
+// SetEncryptor sets the encryptor for creating constant ciphertexts
+// This should be called with a public-key encryptor if you need EncryptConstantCt
+func (e *Evaluator) SetEncryptor(enc *rlwe.Encryptor) {
+	e.encryptor = enc
+}
+
+// EncryptConstantCt creates a ciphertext with a constant value in all slots
+// Requires an encryptor to be set via SetEncryptor
+func (e *Evaluator) EncryptConstantCt(value float64, level int, scale rlwe.Scale) (*rlwe.Ciphertext, error) {
+	if e.encryptor == nil {
+		return nil, fmt.Errorf("encryptor not set - call SetEncryptor first")
+	}
+
+	// Encode constant into all slots
+	pt := e.EncodeConstant(complex(value, 0), level, scale)
+
+	// Encrypt
+	ct, err := e.encryptor.EncryptNew(pt)
+	if err != nil {
+		return nil, fmt.Errorf("encrypt constant failed: %w", err)
+	}
+
+	return ct, nil
+}
+
+// ZeroCiphertextLike creates a zero ciphertext with the same parameters as x
+// This is useful when you need an encrypted zero without an encryptor
+func (e *Evaluator) ZeroCiphertextLike(x *rlwe.Ciphertext) *rlwe.Ciphertext {
+	ct := rlwe.NewCiphertext(e.params.Parameters, 1, x.Level())
+	ct.Scale = x.Scale
+	return ct
 }
 
 // Close releases resources

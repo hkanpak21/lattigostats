@@ -171,25 +171,13 @@ func (n *NumericOp) INVNTHSQRT(x *rlwe.Ciphertext, config INVNTHSQRTConfig) (*rl
 	nFloat := float64(config.N)
 	invN := 1.0 / nFloat
 
-	// Start with y0 as a ciphertext (constant encoded)
-	y := n.eval.EncodeConstant(complex(config.InitialGuess, 0), x.Level(), x.Scale)
-	yCt, err := n.eval.MulPlaintext(x, y)
+	// Initialize y as a ciphertext containing the initial guess in all slots
+	// Method: Create a zero ciphertext from x, then add the constant
+	yCt := n.eval.ZeroCiphertextLike(x)
+	yCt, err = n.eval.AddConst(yCt, complex(config.InitialGuess, 0))
 	if err != nil {
-		return nil, fmt.Errorf("initial mul failed: %w", err)
+		return nil, fmt.Errorf("initial y setup failed: %w", err)
 	}
-	// Actually we need y as a ciphertext, not multiplied by x yet
-	// Encode y0 into all slots
-	yPt := n.eval.EncodeConstant(complex(config.InitialGuess, 0), x.Level(), x.Scale)
-
-	// For proper initialization, we need to encrypt the initial guess
-	// Since we only have eval keys, we'll simulate by encoding as plaintext and using
-	// a multiplication trick: y = 1 * y0 where 1 is implicit
-	// Actually, we need to start from an encrypted y. Let's use a different approach:
-	// Use x itself scaled: y = initGuess * ones ciphertext
-	// Create an encrypted "1" by dividing x by x (but that's circular)
-
-	// Simpler approach: use plaintext y and ct x for first iteration
-	// Then y becomes a ciphertext
 
 	// Newton iteration
 	for iter := 0; iter < config.Iterations; iter++ {
@@ -251,9 +239,6 @@ func (n *NumericOp) INVNTHSQRT(x *rlwe.Ciphertext, config INVNTHSQRTConfig) (*rl
 			return nil, fmt.Errorf("iteration %d div by n failed: %w", iter, err)
 		}
 	}
-
-	// ignore the yPt to prevent compiler error
-	_ = yPt
 
 	return yCt, nil
 }

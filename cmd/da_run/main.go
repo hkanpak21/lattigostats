@@ -12,8 +12,10 @@ import (
 
 	"github.com/hkanpak21/lattigostats/pkg/he"
 	"github.com/hkanpak21/lattigostats/pkg/jobs"
+	"github.com/hkanpak21/lattigostats/pkg/ops/approx"
 	"github.com/hkanpak21/lattigostats/pkg/ops/categorical"
 	"github.com/hkanpak21/lattigostats/pkg/ops/numeric"
+	"github.com/hkanpak21/lattigostats/pkg/ops/ordinal"
 	"github.com/hkanpak21/lattigostats/pkg/params"
 	"github.com/hkanpak21/lattigostats/pkg/schema"
 	"github.com/hkanpak21/lattigostats/pkg/storage"
@@ -123,6 +125,12 @@ func main() {
 		result, err = runCorrelation(eval, store, meta, job)
 	case jobs.OpBc, jobs.OpBa, jobs.OpBv:
 		result, err = runBinOp(eval, store, meta, job)
+	case jobs.OpLBc:
+		result, err = runLBc(eval, store, meta, job)
+	case jobs.OpPercentile:
+		result, err = runPercentile(eval, store, meta, job)
+	case jobs.OpLookup:
+		result, err = runLookup(eval, store, meta, job)
 	default:
 		fmt.Fprintf(os.Stderr, "Operation %s not yet implemented\n", job.Operation)
 		os.Exit(1)
@@ -319,5 +327,209 @@ func (a *bmvStoreAdapter) GetBMV(columnName string, value int, blockIndex int) (
 }
 
 func (a *bmvStoreAdapter) BlockCount() int {
+	return a.blockCount
+}
+
+// runLBc runs Large-Bin-Count computation
+func runLBc(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
+	if len(job.InputColumns) < 1 {
+		return nil, fmt.Errorf("LBc requires at least one input column")
+	}
+
+	primaryCol := job.InputColumns[0]
+	otherCols := job.InputColumns[1:]
+
+	fmt.Printf("  Computing LBc with primary=%s, others=%v...\n", primaryCol, otherCols)
+
+	// Load validity blocks
+	vBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	for b := 0; b < meta.BlockCount; b++ {
+		var err error
+		vBlocks[b], err = store.LoadValidity(primaryCol, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load validity: %w", err)
+		}
+	}
+
+	// Create PBMV store adapter
+	pbmvStore := &pbmvStoreAdapter{
+		store:      store,
+		blockCount: meta.BlockCount,
+	}
+
+	// Create BBMV store adapters for other columns
+	bbmvStores := make(map[string]categorical.BBMVStore)
+	for _, col := range otherCols {
+		bbmvStores[col] = &bbmvStoreAdapter{
+			store:      store,
+			blockCount: meta.BlockCount,
+		}
+	}
+
+	config := categorical.DefaultLBcConfig()
+	lbcComputer := categorical.NewLBcComputer(eval, config)
+
+	lbcResult, err := lbcComputer.ComputeLBc(primaryCol, pbmvStore, otherCols, bbmvStores, vBlocks)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the first packed result (DDIA will post-process)
+	if len(lbcResult.PackedResults) == 0 {
+		return nil, fmt.Errorf("LBc produced no results")
+	}
+
+	return lbcResult.PackedResults[0], nil
+}
+
+// runPercentile runs k-percentile computation
+func runPercentile(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
+	if len(job.InputColumns) < 1 {
+		return nil, fmt.Errorf("percentile requires an input column")
+	}
+	if job.K <= 0 || job.K > 100 {
+		return nil, fmt.Errorf("k must be between 0 and 100")
+	}
+
+	colName := job.InputColumns[0]
+	col := meta.Schema.GetColumn(colName)
+	if col == nil {
+		return nil, fmt.Errorf("column %s not found", colName)
+	}
+
+	fmt.Printf("  Computing %.0f-th percentile for %s...\n", job.K, colName)
+
+	// Load validity blocks
+	vBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	for b := 0; b < meta.BlockCount; b++ {
+		var err error
+		vBlocks[b], err = store.LoadValidity(colName, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load validity: %w", err)
+		}
+	}
+
+	// Create BMV store for ordinal
+	bmvStore := &ordinalBMVStoreAdapter{
+		store:      store,
+		colName:    colName,
+		blockCount: meta.BlockCount,
+	}
+
+	ordOp := ordinal.NewOrdinalOp(eval)
+	config := ordinal.PercentileConfig{
+		K:          float64(job.K),
+		Categories: col.CategoryCount,
+	}
+
+	return ordOp.Percentile(vBlocks, bmvStore, config)
+}
+
+// runLookup runs table lookup (equality check + selection)
+func runLookup(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
+	if job.LookupColumn == "" || job.TargetColumn == "" {
+		return nil, fmt.Errorf("lookup requires lookup_column and target_column")
+	}
+
+	lookupCol := meta.Schema.GetColumn(job.LookupColumn)
+	if lookupCol == nil {
+		return nil, fmt.Errorf("lookup column %s not found", job.LookupColumn)
+	}
+
+	fmt.Printf("  Looking up %s where %s=%d...\n", job.TargetColumn, job.LookupColumn, job.LookupValue)
+
+	approxOp := approx.NewApproxOp(eval)
+	dezConfig := approx.DefaultDEZConfig(lookupCol.CategoryCount)
+
+	var result *rlwe.Ciphertext
+
+	for b := 0; b < meta.BlockCount; b++ {
+		// Load categorical column
+		catBlock, err := store.LoadBlock(job.LookupColumn, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load lookup column block %d: %w", b, err)
+		}
+
+		// Load target column
+		targetBlock, err := store.LoadBlock(job.TargetColumn, b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load target column block %d: %w", b, err)
+		}
+
+		// Compute cat - value
+		catMinus, err := eval.AddConst(catBlock, complex(float64(-job.LookupValue), 0))
+		if err != nil {
+			return nil, fmt.Errorf("cat minus block %d failed: %w", b, err)
+		}
+
+		// Compute equality indicator
+		eq, err := approxOp.DISCRETEEQUALZERO(catMinus, dezConfig)
+		if err != nil {
+			return nil, fmt.Errorf("equality check block %d failed: %w", b, err)
+		}
+
+		// Multiply equality by target
+		masked, err := eval.Mul(eq, targetBlock)
+		if err != nil {
+			return nil, fmt.Errorf("mask block %d failed: %w", b, err)
+		}
+		masked, err = eval.Rescale(masked)
+		if err != nil {
+			return nil, fmt.Errorf("mask rescale block %d failed: %w", b, err)
+		}
+
+		// Accumulate
+		if result == nil {
+			result = masked
+		} else {
+			if err := eval.AddInPlace(result, masked); err != nil {
+				return nil, fmt.Errorf("accumulate block %d failed: %w", b, err)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// pbmvStoreAdapter adapts storage to PBMV store
+type pbmvStoreAdapter struct {
+	store      *storage.TableStore
+	blockCount int
+}
+
+func (a *pbmvStoreAdapter) GetPBMV(columnName string, blockIndex int) (*rlwe.Ciphertext, error) {
+	return a.store.LoadPBMV(columnName, blockIndex)
+}
+
+func (a *pbmvStoreAdapter) BlockCount() int {
+	return a.blockCount
+}
+
+// bbmvStoreAdapter adapts storage to BBMV store
+type bbmvStoreAdapter struct {
+	store      *storage.TableStore
+	blockCount int
+}
+
+func (a *bbmvStoreAdapter) GetBBMV(columnName string, blockIndex int) (*rlwe.Ciphertext, error) {
+	return a.store.LoadBBMV(columnName, blockIndex)
+}
+
+func (a *bbmvStoreAdapter) BlockCount() int {
+	return a.blockCount
+}
+
+// ordinalBMVStoreAdapter adapts storage to ordinal BMV store
+type ordinalBMVStoreAdapter struct {
+	store      *storage.TableStore
+	colName    string
+	blockCount int
+}
+
+func (a *ordinalBMVStoreAdapter) GetBMV(value int, blockIndex int) (*rlwe.Ciphertext, error) {
+	return a.store.LoadBMV(a.colName, value, blockIndex)
+}
+
+func (a *ordinalBMVStoreAdapter) BlockCount() int {
 	return a.blockCount
 }
