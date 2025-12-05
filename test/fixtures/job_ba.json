@@ -1,0 +1,9 @@
+{
+  "id": "binavg_income_male",
+  "operation": "ba",
+  "target": "income",
+  "conditions": [
+    {"column": "gender", "value": 1}
+  ],
+  "description": "Average income for males"
+}

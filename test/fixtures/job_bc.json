@@ -1,0 +1,9 @@
+{
+  "id": "bincount_female_south",
+  "operation": "bc",
+  "conditions": [
+    {"column": "gender", "value": 2},
+    {"column": "region", "value": 2}
+  ],
+  "description": "Count females in South region"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "percentile90_risk",
+  "operation": "percentile",
+  "columns": ["risk_bucket"],
+  "k": 90,
+  "description": "90th percentile of risk bucket"
+}

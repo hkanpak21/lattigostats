@@ -1,0 +1,43 @@
+{
+  "name": "test_dataset",
+  "description": "A small test dataset for Lattigo-STAT validation",
+  "columns": [
+    {
+      "name": "id",
+      "type": "numerical",
+      "description": "Row identifier"
+    },
+    {
+      "name": "income",
+      "type": "numerical",
+      "min_value": 0,
+      "max_value": 100000,
+      "description": "Annual income (normalized)"
+    },
+    {
+      "name": "spending",
+      "type": "numerical",
+      "min_value": 0,
+      "max_value": 50000,
+      "description": "Annual spending"
+    },
+    {
+      "name": "gender",
+      "type": "categorical",
+      "category_count": 2,
+      "description": "1=Male, 2=Female"
+    },
+    {
+      "name": "region",
+      "type": "categorical",
+      "category_count": 4,
+      "description": "1=North, 2=South, 3=East, 4=West"
+    },
+    {
+      "name": "risk_bucket",
+      "type": "ordinal",
+      "category_count": 5,
+      "description": "1=VeryLow, 2=Low, 3=Medium, 4=High, 5=VeryHigh"
+    }
+  ]
+}

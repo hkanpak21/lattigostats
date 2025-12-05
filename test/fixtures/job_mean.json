@@ -1,0 +1,6 @@
+{
+  "id": "mean_income",
+  "operation": "mean",
+  "columns": ["income"],
+  "description": "Compute mean income across all valid rows"
+}

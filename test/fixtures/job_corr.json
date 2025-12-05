@@ -1,0 +1,6 @@
+{
+  "id": "corr_income_spending",
+  "operation": "corr",
+  "columns": ["income", "spending"],
+  "description": "Compute Pearson correlation between income and spending"
+}
