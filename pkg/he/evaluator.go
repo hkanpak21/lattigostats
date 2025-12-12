@@ -376,6 +376,11 @@ func (e *Evaluator) Power(ct *rlwe.Ciphertext, n int) (*rlwe.Ciphertext, error) 
 				if err != nil {
 					return nil, err
 				}
+				// Bootstrap if needed
+				result, err = e.MaybeBootstrap(result)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 		power >>= 1
@@ -386,6 +391,11 @@ func (e *Evaluator) Power(ct *rlwe.Ciphertext, n int) (*rlwe.Ciphertext, error) 
 				return nil, err
 			}
 			base, err = e.Rescale(base)
+			if err != nil {
+				return nil, err
+			}
+			// Bootstrap if needed
+			base, err = e.MaybeBootstrap(base)
 			if err != nil {
 				return nil, err
 			}

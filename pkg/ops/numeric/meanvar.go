@@ -211,6 +211,11 @@ func (n *NumericOp) INVNTHSQRT(x *rlwe.Ciphertext, config INVNTHSQRTConfig) (*rl
 		if err != nil {
 			return nil, fmt.Errorf("iteration %d rescale failed: %w", iter, err)
 		}
+		// Bootstrap after rescale if needed
+		xyN, err = n.eval.MaybeBootstrap(xyN)
+		if err != nil {
+			return nil, fmt.Errorf("iteration %d bootstrap xyN failed: %w", iter, err)
+		}
 
 		// Compute (n+1) - x*y^n
 		diff, err := n.eval.AddConst(xyN, complex(-nPlusOne, 0))
@@ -231,6 +236,11 @@ func (n *NumericOp) INVNTHSQRT(x *rlwe.Ciphertext, config INVNTHSQRTConfig) (*rl
 		yNew, err = n.eval.Rescale(yNew)
 		if err != nil {
 			return nil, fmt.Errorf("iteration %d final rescale failed: %w", iter, err)
+		}
+		// Bootstrap after final rescale if needed
+		yNew, err = n.eval.MaybeBootstrap(yNew)
+		if err != nil {
+			return nil, fmt.Errorf("iteration %d bootstrap yNew failed: %w", iter, err)
 		}
 
 		// Divide by n: y = y * ((n+1) - x*y^n) / n
