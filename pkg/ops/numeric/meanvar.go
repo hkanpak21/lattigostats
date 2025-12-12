@@ -131,12 +131,13 @@ type INVNTHSQRTConfig struct {
 }
 
 // DefaultINVConfig returns default config for inverse (n=1)
+// Note: Reduced iterations for Profile A compatibility (limited depth)
 func DefaultINVConfig() INVNTHSQRTConfig {
 	return INVNTHSQRTConfig{
 		N:                  1,
-		Iterations:         25,
+		Iterations:         8, // Reduced from 25 for Profile A compatibility
 		BootstrapFrequency: 5,
-		InitialGuess:       0.5,
+		InitialGuess:       0.2, // Better initial guess for small counts
 	}
 }
 
