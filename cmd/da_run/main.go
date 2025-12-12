@@ -92,20 +92,41 @@ func main() {
 		os.Exit(1)
 	}
 
-	galksPath := filepath.Join(*keysPath, "galois.key")
-	galksData, err := os.ReadFile(galksPath)
+	// Load Galois keys
+	galksDir := filepath.Join(*keysPath, "galois")
+	galksEntries, err := os.ReadDir(galksDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read Galois keys: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to read Galois keys directory: %v\n", err)
 		os.Exit(1)
 	}
-	galks := new(rlwe.GaloisKey)
-	if err := galks.UnmarshalBinary(galksData); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse Galois keys: %v\n", err)
+
+	var galks []*rlwe.GaloisKey
+	for _, entry := range galksEntries {
+		if entry.IsDir() {
+			continue
+		}
+		// Load key
+		gkPath := filepath.Join(galksDir, entry.Name())
+		gkData, err := os.ReadFile(gkPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to read Galois key %s: %v\n", entry.Name(), err)
+			os.Exit(1)
+		}
+		gk := new(rlwe.GaloisKey)
+		if err := gk.UnmarshalBinary(gkData); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to parse Galois key %s: %v\n", entry.Name(), err)
+			os.Exit(1)
+		}
+		galks = append(galks, gk)
+	}
+
+	if len(galks) == 0 {
+		fmt.Fprintln(os.Stderr, "No Galois keys found in directory")
 		os.Exit(1)
 	}
 
 	// Create evaluation key set
-	evk := rlwe.NewMemEvaluationKeySet(rlk, galks)
+	evk := rlwe.NewMemEvaluationKeySet(rlk, galks...)
 
 	// Create evaluator
 	eval, err := he.NewEvaluator(p, evk, nil)
