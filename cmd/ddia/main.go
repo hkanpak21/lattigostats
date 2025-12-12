@@ -11,6 +11,7 @@ import (
 
 	"github.com/hkanpak21/lattigostats/pkg/params"
 	"github.com/hkanpak21/lattigostats/pkg/privacy"
+	"github.com/hkanpak21/lattigostats/pkg/storage"
 	"github.com/tuneinsight/lattigo/v6/circuits/ckks/bootstrapping"
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
 	"github.com/tuneinsight/lattigo/v6/schemes/ckks"
@@ -246,15 +247,10 @@ func runDecrypt(cmd *flag.FlagSet, args []string) {
 		os.Exit(1)
 	}
 
-	// Load ciphertext
-	ctData, err := os.ReadFile(*ctPath)
+	// Load ciphertext using storage package (handles length prefix)
+	ct, err := storage.LoadCiphertext(*ctPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read ciphertext: %v\n", err)
-		os.Exit(1)
-	}
-	ct := new(rlwe.Ciphertext)
-	if err := ct.UnmarshalBinary(ctData); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse ciphertext: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to load ciphertext: %v\n", err)
 		os.Exit(1)
 	}
 

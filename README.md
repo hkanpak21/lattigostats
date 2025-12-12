@@ -55,12 +55,14 @@ go build -o bin/da_run ./cmd/da_run
 ./bin/ddia keygen -profile A -output ./keys
 ```
 
-This generates:
-- `secret.key` - Secret key (NEVER share!)
-- `public.key` - Public key for encryption
-- `relin.key` - Relinearization key
-- `galois/` - Directory with Galois (rotation) keys
-- `params.json` - Parameter metadata
+**Generated files:**
+| File | Description |
+|------|-------------|
+| `secret.key` | Secret key (NEVER share!) |
+| `public.key` | Public key for encryption |
+| `relin.key` | Relinearization key |
+| `galois/` | Directory with Galois (rotation) keys |
+| `params.json` | Parameter metadata |
 
 ### 2. Encrypt Data (Data Owner)
 
@@ -70,9 +72,20 @@ Create a schema file (`schema.json`):
   "name": "my_dataset",
   "columns": [
     {"name": "income", "type": "numerical"},
+    {"name": "age", "type": "numerical"},
     {"name": "gender", "type": "categorical", "category_count": 2}
   ]
 }
+```
+
+Create test data (`data.csv`):
+```csv
+income,age,gender
+50000,25,1
+60000,30,2
+55000,28,1
+70000,35,2
+65000,32,1
 ```
 
 Encrypt your CSV data:
@@ -85,7 +98,7 @@ Encrypt your CSV data:
   -profile A
 ```
 
-> **Note:** The `-profile` flag must match the profile used in key generation.
+> **Important:** The `-profile` flag must match the profile used in key generation.
 
 ### 3. Run Statistical Jobs (DA)
 
@@ -113,13 +126,13 @@ Execute:
 Decrypt the result:
 ```bash
 ./bin/ddia decrypt \
-  -input result.ct/result.ct \
-  -keys ./keys \
+  -sk ./keys/secret.key \
+  -ct result.ct/result.ct \
   -output decrypted_result.json \
   -profile A
 ```
 
-Inspect for privacy (optional policy file):
+Inspect for privacy (optional):
 ```bash
 # With default policy
 ./bin/ddia inspect -input decrypted_result.json
@@ -130,12 +143,82 @@ Inspect for privacy (optional policy file):
 
 > **Note:** The `inspect` command does NOT take a `-profile` flag.
 
+---
+
+## Complete End-to-End Example
+
+```bash
+# Step 1: Build all tools
+go build -o bin/ddia ./cmd/ddia
+go build -o bin/do_encrypt ./cmd/do_encrypt
+go build -o bin/da_run ./cmd/da_run
+
+# Step 2: Generate keys
+./bin/ddia keygen -profile A -output ./keys
+
+# Step 3: Create test data
+echo 'income,age,gender
+50000,25,1
+60000,30,2
+55000,28,1
+70000,35,2
+65000,32,1' > data.csv
+
+echo '{"name": "my_dataset", "columns": [
+  {"name": "income", "type": "numerical"},
+  {"name": "age", "type": "numerical"},
+  {"name": "gender", "type": "categorical", "category_count": 2}
+]}' > schema.json
+
+# Step 4: Encrypt data
+./bin/do_encrypt -data data.csv -schema schema.json -pk ./keys/public.key -output ./encrypted -profile A
+
+# Step 5: Run mean operation
+echo '{"id": "mean_income", "operation": "mean", "table": "my_dataset", "input_columns": ["income"]}' > job.json
+./bin/da_run -job job.json -table ./encrypted -keys ./keys -output result.ct
+
+# Step 6: Decrypt result
+./bin/ddia decrypt -sk ./keys/secret.key -ct result.ct/result.ct -output result.json -profile A
+cat result.json
+```
+
+---
+
 ## Parameter Profiles
 
-| Profile | LogN | Slots | Use Case |
-|---------|------|-------|----------|
-| A | 14 | 8,192 | Mean, Variance, Bc, Ba, Bv (local machine) |
-| B | 16 | 32,768 | Large datasets, Bootstrapping (server with 16+ GB RAM) |
+| Profile | LogN | Slots | Memory | Use Case |
+|---------|------|-------|--------|----------|
+| **A** | 14 | 8,192 | ~1 GB | Mean, Variance, Bc, Ba, Bv (local machine) |
+| **B** | 16 | 32,768 | ~16 GB | Large datasets, Bootstrapping (server) |
+
+---
+
+## Command Reference
+
+### ddia keygen
+```bash
+./bin/ddia keygen -profile <A|B> -output <directory>
+```
+
+### do_encrypt
+```bash
+./bin/do_encrypt -data <csv> -schema <json> -pk <public_key> -output <dir> -profile <A|B>
+```
+
+### da_run
+```bash
+./bin/da_run -job <job.json> -table <encrypted_dir> -keys <keys_dir> -output <result.ct>
+```
+
+### ddia decrypt
+```bash
+./bin/ddia decrypt -sk <secret_key> -ct <ciphertext> -output <result.json> -profile <A|B>
+```
+
+### ddia inspect
+```bash
+./bin/ddia inspect -input <decrypted.json> [-policy <policy.json>]
+```
 
 ## Project Structure
 
