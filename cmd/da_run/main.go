@@ -19,6 +19,7 @@ import (
 	"github.com/hkanpak21/lattigostats/pkg/params"
 	"github.com/hkanpak21/lattigostats/pkg/schema"
 	"github.com/hkanpak21/lattigostats/pkg/storage"
+	"github.com/tuneinsight/lattigo/v6/circuits/ckks/bootstrapping"
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
 )
 
@@ -86,49 +87,91 @@ func main() {
 	}
 	fmt.Printf("Job: %s (%s)\n", job.ID, job.Operation)
 
-	// Load evaluation keys
-	fmt.Println("Loading evaluation keys...")
-	rlkPath := filepath.Join(*keysPath, "relin.key")
-	rlkData, err := os.ReadFile(rlkPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read relin key: %v\n", err)
-		os.Exit(1)
-	}
-	rlk := new(rlwe.RelinearizationKey)
-	if err := rlk.UnmarshalBinary(rlkData); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse relin key: %v\n", err)
-		os.Exit(1)
-	}
+	// Load keys based on profile
+	var evk rlwe.EvaluationKeySet
+	var btp *bootstrapping.Evaluator
 
-	galksDir := filepath.Join(*keysPath, "galois")
-	galksEntries, err := os.ReadDir(galksDir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read Galois keys directory: %v\n", err)
-		os.Exit(1)
-	}
-
-	var galks []*rlwe.GaloisKey
-	for _, entry := range galksEntries {
-		if entry.IsDir() {
-			continue
-		}
-		gkPath := filepath.Join(galksDir, entry.Name())
-		gkData, err := os.ReadFile(gkPath)
+	if prof.BootstrapEnabled {
+		// Profile B: Load bootstrapping keys bundle
+		fmt.Println("Loading bootstrapping keys...")
+		bkPath := filepath.Join(*keysPath, "bootstrapping.key")
+		bkData, err := os.ReadFile(bkPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to read Galois key %s: %v\n", entry.Name(), err)
+			fmt.Fprintf(os.Stderr, "Failed to read bootstrapping keys: %v\n", err)
 			os.Exit(1)
 		}
-		gk := new(rlwe.GaloisKey)
-		if err := gk.UnmarshalBinary(gkData); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse Galois key %s: %v\n", entry.Name(), err)
+		btpEvk := new(bootstrapping.EvaluationKeys)
+		if err := btpEvk.UnmarshalBinary(bkData); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to unmarshal bootstrapping keys: %v\n", err)
 			os.Exit(1)
 		}
-		galks = append(galks, gk)
-	}
-	evk := rlwe.NewMemEvaluationKeySet(rlk, galks...)
 
-	// Create evaluator (no bootstrapping)
-	eval, err := he.NewEvaluator(p, evk, nil)
+		// Initialize bootstrapper
+		fmt.Println("Initializing bootstrapper...")
+		logN := p.LogN()
+		btpParamsLiteral := bootstrapping.ParametersLiteral{
+			LogN: &logN,
+			LogP: []int{61, 61, 61, 61},
+			Xs:   p.Xs(),
+		}
+		btpParams, err := bootstrapping.NewParametersFromLiteral(p, btpParamsLiteral)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create bootstrapping params: %v\n", err)
+			os.Exit(1)
+		}
+
+		btp, err = bootstrapping.NewEvaluator(btpParams, btpEvk)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create bootstrapper: %v\n", err)
+			os.Exit(1)
+		}
+		evk = btpEvk
+
+	} else {
+		// Profile A: Load standard evaluation keys
+		fmt.Println("Loading evaluation keys...")
+		rlkPath := filepath.Join(*keysPath, "relin.key")
+		rlkData, err := os.ReadFile(rlkPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to read relin key: %v\n", err)
+			os.Exit(1)
+		}
+		rlk := new(rlwe.RelinearizationKey)
+		if err := rlk.UnmarshalBinary(rlkData); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to parse relin key: %v\n", err)
+			os.Exit(1)
+		}
+
+		galksDir := filepath.Join(*keysPath, "galois")
+		galksEntries, err := os.ReadDir(galksDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to read Galois keys directory: %v\n", err)
+			os.Exit(1)
+		}
+
+		var galks []*rlwe.GaloisKey
+		for _, entry := range galksEntries {
+			if entry.IsDir() {
+				continue
+			}
+			gkPath := filepath.Join(galksDir, entry.Name())
+			gkData, err := os.ReadFile(gkPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to read Galois key %s: %v\n", entry.Name(), err)
+				os.Exit(1)
+			}
+			gk := new(rlwe.GaloisKey)
+			if err := gk.UnmarshalBinary(gkData); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to parse Galois key %s: %v\n", entry.Name(), err)
+				os.Exit(1)
+			}
+			galks = append(galks, gk)
+		}
+		evk = rlwe.NewMemEvaluationKeySet(rlk, galks...)
+	}
+
+	// Create evaluator
+	eval, err := he.NewEvaluator(p, evk, btp)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create evaluator: %v\n", err)
 		os.Exit(1)
