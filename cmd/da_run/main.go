@@ -37,16 +37,39 @@ func main() {
 
 	startTime := time.Now()
 
+	// Load table
+	store, err := storage.OpenTableStore(*tablePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open table: %v\n", err)
+		os.Exit(1)
+	}
+
+	metaPath := filepath.Join(*tablePath, "metadata.json")
+	meta, err := schema.LoadMetadataFromFile(metaPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load metadata: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Table: %s (%d rows, %d blocks)\n", meta.Schema.Name, meta.RowCount, meta.BlockCount)
+
+	// Use profile from metadata if not explicitly overridden (or match logic)
+	// Actually, we should trust the metadata profile as the data is encrypted with it.
+	// Use profile from metadata if not explicitly overridden (or match logic)
+	detectedProfile := meta.ParamsHash
+	if *profile != "A" && *profile != string(detectedProfile) {
+		fmt.Printf("Warning: Flag profile %s differs from table profile %s. Using table profile.\n", *profile, detectedProfile)
+	}
+	fmt.Printf("Using Profile: %s\n", detectedProfile)
+
 	// Load parameters
 	var prof *params.Profile
-	var err error
-	switch *profile {
+	switch string(detectedProfile) {
 	case "A":
 		prof, err = params.NewProfileA()
 	case "B":
 		prof, err = params.NewProfileB()
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown profile: %s\n", *profile)
+		fmt.Fprintf(os.Stderr, "Unknown profile in metadata: %s\n", detectedProfile)
 		os.Exit(1)
 	}
 	if err != nil {
@@ -63,21 +86,6 @@ func main() {
 	}
 	fmt.Printf("Job: %s (%s)\n", job.ID, job.Operation)
 
-	// Load table
-	store, err := storage.OpenTableStore(*tablePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to open table: %v\n", err)
-		os.Exit(1)
-	}
-
-	metaPath := filepath.Join(*tablePath, "metadata.json")
-	meta, err := schema.LoadMetadataFromFile(metaPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load metadata: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("Table: %s (%d rows, %d blocks)\n", meta.Schema.Name, meta.RowCount, meta.BlockCount)
-
 	// Load evaluation keys
 	fmt.Println("Loading evaluation keys...")
 	rlkPath := filepath.Join(*keysPath, "relin.key")
@@ -92,7 +100,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Load Galois keys
 	galksDir := filepath.Join(*keysPath, "galois")
 	galksEntries, err := os.ReadDir(galksDir)
 	if err != nil {
@@ -105,7 +112,6 @@ func main() {
 		if entry.IsDir() {
 			continue
 		}
-		// Load key
 		gkPath := filepath.Join(galksDir, entry.Name())
 		gkData, err := os.ReadFile(gkPath)
 		if err != nil {
@@ -119,16 +125,9 @@ func main() {
 		}
 		galks = append(galks, gk)
 	}
-
-	if len(galks) == 0 {
-		fmt.Fprintln(os.Stderr, "No Galois keys found in directory")
-		os.Exit(1)
-	}
-
-	// Create evaluation key set
 	evk := rlwe.NewMemEvaluationKeySet(rlk, galks...)
 
-	// Create evaluator
+	// Create evaluator (no bootstrapping)
 	eval, err := he.NewEvaluator(p, evk, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create evaluator: %v\n", err)

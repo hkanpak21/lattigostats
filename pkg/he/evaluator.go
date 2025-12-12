@@ -500,6 +500,7 @@ func (e *Evaluator) EncryptConstantCt(value float64, level int, scale rlwe.Scale
 func (e *Evaluator) ZeroCiphertextLike(x *rlwe.Ciphertext) *rlwe.Ciphertext {
 	ct := rlwe.NewCiphertext(e.params.Parameters, 1, x.Level())
 	ct.Scale = x.Scale
+	ct.IsBatched = x.IsBatched
 	return ct
 }
 

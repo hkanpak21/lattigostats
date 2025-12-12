@@ -11,6 +11,7 @@ import (
 
 	"github.com/hkanpak21/lattigostats/pkg/params"
 	"github.com/hkanpak21/lattigostats/pkg/privacy"
+	"github.com/tuneinsight/lattigo/v6/circuits/ckks/bootstrapping"
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
 	"github.com/tuneinsight/lattigo/v6/schemes/ckks"
 )
@@ -87,15 +88,6 @@ func runKeygen(cmd *flag.FlagSet, args []string) {
 	fmt.Println("Generating relinearization key...")
 	rlk := kgen.GenRelinearizationKeyNew(sk)
 
-	fmt.Println("Generating Galois keys for rotations...")
-	// Generate rotation keys for power-of-2 rotations
-	slots := p.MaxSlots()
-	rotations := make([]int, 0)
-	for rot := 1; rot < slots; rot *= 2 {
-		rotations = append(rotations, rot)
-	}
-	galks := kgen.GenGaloisKeysNew(rlwe.GaloisElementsForInnerSum(p, 1, slots), sk)
-
 	// Save keys
 	fmt.Println("Saving keys...")
 
@@ -123,20 +115,66 @@ func runKeygen(cmd *flag.FlagSet, args []string) {
 	}
 	fmt.Printf("Relinearization key saved to: %s\n", rlkPath)
 
-	// Galois keys - save individually or as a set
-	galksDir := filepath.Join(*outputDir, "galois")
-	if err := os.MkdirAll(galksDir, 0700); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create galois directory: %v\n", err)
-		os.Exit(1)
-	}
-	for i, gk := range galks {
-		gkPath := filepath.Join(galksDir, fmt.Sprintf("galois_%d.key", i))
-		if err := saveKey(gkPath, gk); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to save Galois key %d: %v\n", i, err)
+	// Generate Galois keys (and bootstrapping keys for Profile B)
+	if prof.BootstrapEnabled {
+		fmt.Println("Generating Bootstrapping keys (this may take a while)...")
+		fmt.Println("WARNING: This operation is memory-intensive and may take several minutes.")
+
+		// Create bootstrapping parameters
+		logN := p.LogN()
+		btpParamsLiteral := bootstrapping.ParametersLiteral{
+			LogN: &logN,
+			LogP: []int{61, 61, 61, 61},
+			Xs:   p.Xs(),
+		}
+
+		btpParams, err := bootstrapping.NewParametersFromLiteral(p, btpParamsLiteral)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create bootstrapping params: %v\n", err)
 			os.Exit(1)
 		}
+
+		// Generate bootstrapping evaluation keys
+		btpEvk, _, err := btpParams.GenEvaluationKeys(sk)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to generate bootstrapping keys: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Save bootstrapping keys as a single bundle
+		bkPath := filepath.Join(*outputDir, "bootstrapping.key")
+		bkData, err := btpEvk.MarshalBinary()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to marshal bootstrapping keys: %v\n", err)
+			os.Exit(1)
+		}
+		if err := os.WriteFile(bkPath, bkData, 0600); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to save bootstrapping keys: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("Bootstrapping keys saved to: %s\n", bkPath)
+
+	} else {
+		// Profile A: Generate standard Galois keys for rotations
+		fmt.Println("Generating Galois keys for rotations...")
+		slots := p.MaxSlots()
+		galks := kgen.GenGaloisKeysNew(rlwe.GaloisElementsForInnerSum(p, 1, slots), sk)
+
+		// Save Galois keys individually
+		galksDir := filepath.Join(*outputDir, "galois")
+		if err := os.MkdirAll(galksDir, 0700); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create galois directory: %v\n", err)
+			os.Exit(1)
+		}
+		for i, gk := range galks {
+			gkPath := filepath.Join(galksDir, fmt.Sprintf("galois_%d.key", i))
+			if err := saveKey(gkPath, gk); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save Galois key %d: %v\n", i, err)
+				os.Exit(1)
+			}
+		}
+		fmt.Printf("Galois keys saved to: %s\n", galksDir)
 	}
-	fmt.Printf("Galois keys saved to: %s\n", galksDir)
 
 	// Save parameters metadata
 	meta := map[string]interface{}{
