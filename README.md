@@ -58,7 +58,8 @@ go build -o bin/da_run ./cmd/da_run
 This generates:
 - `secret.key` - Secret key (NEVER share!)
 - `public.key` - Public key for encryption
-- `eval.key` - Evaluation keys for HE operations
+- `relin.key` - Relinearization key
+- `galois/` - Directory with Galois (rotation) keys
 - `params.json` - Parameter metadata
 
 ### 2. Encrypt Data (Data Owner)
@@ -77,11 +78,14 @@ Create a schema file (`schema.json`):
 Encrypt your CSV data:
 ```bash
 ./bin/do_encrypt \
-  -input data.csv \
+  -data data.csv \
   -schema schema.json \
-  -keys ./keys \
-  -output ./encrypted
+  -pk ./keys/public.key \
+  -output ./encrypted \
+  -profile A
 ```
+
+> **Note:** The `-profile` flag must match the profile used in key generation.
 
 ### 3. Run Statistical Jobs (DA)
 
@@ -90,7 +94,8 @@ Create a job specification (`job.json`):
 {
   "id": "mean_income",
   "operation": "mean",
-  "columns": ["income"]
+  "table": "my_dataset",
+  "input_columns": ["income"]
 }
 ```
 
@@ -105,22 +110,32 @@ Execute:
 
 ### 4. Decrypt and Inspect (DDIA)
 
+Decrypt the result:
 ```bash
 ./bin/ddia decrypt \
+  -input result.ct/result.ct \
   -keys ./keys \
-  -input result.ct
-
-./bin/ddia inspect \
-  -input decrypted_result.json \
-  -policy policy.json
+  -output decrypted_result.json \
+  -profile A
 ```
+
+Inspect for privacy (optional policy file):
+```bash
+# With default policy
+./bin/ddia inspect -input decrypted_result.json
+
+# With custom policy
+./bin/ddia inspect -input decrypted_result.json -policy policy.json
+```
+
+> **Note:** The `inspect` command does NOT take a `-profile` flag.
 
 ## Parameter Profiles
 
-| Profile | LogN | Slots | Bootstrapping | Use Case |
-|---------|------|-------|---------------|----------|
-| A | 14 | 8,192 | No | Mean, Variance, Bc, Ba, Bv |
-| B | 16 | 32,768 | Yes | INVNTHSQRT, DISCRETEEQUALZERO, Percentile |
+| Profile | LogN | Slots | Use Case |
+|---------|------|-------|----------|
+| A | 14 | 8,192 | Mean, Variance, Bc, Ba, Bv (local machine) |
+| B | 16 | 32,768 | Large datasets, Bootstrapping (server with 16+ GB RAM) |
 
 ## Project Structure
 
@@ -152,24 +167,25 @@ lattigo-stat/
 
 ### Mean
 ```json
-{"operation": "mean", "columns": ["income"]}
+{"operation": "mean", "table": "my_dataset", "input_columns": ["income"]}
 ```
 
 ### Variance / StdDev
 ```json
-{"operation": "var", "columns": ["income"]}
-{"operation": "stdev", "columns": ["income"]}
+{"operation": "var", "table": "my_dataset", "input_columns": ["income"]}
+{"operation": "stdev", "table": "my_dataset", "input_columns": ["income"]}
 ```
 
 ### Correlation
 ```json
-{"operation": "corr", "columns": ["income", "spending"]}
+{"operation": "corr", "table": "my_dataset", "input_columns": ["income", "spending"]}
 ```
 
 ### Bin Count (Bc)
 ```json
 {
   "operation": "bc",
+  "table": "my_dataset",
   "conditions": [
     {"column": "gender", "value": 1},
     {"column": "region", "value": 2}
@@ -177,11 +193,22 @@ lattigo-stat/
 }
 ```
 
-### Bin Average (Ba)
+### Bin Average (Ba) - Grouped Mean
 ```json
 {
   "operation": "ba",
-  "target": "income",
+  "table": "my_dataset",
+  "target_column": "income",
+  "conditions": [{"column": "gender", "value": 1}]
+}
+```
+
+### Bin Variance (Bv) - Grouped Variance
+```json
+{
+  "operation": "bv",
+  "table": "my_dataset",
+  "target_column": "income",
   "conditions": [{"column": "gender", "value": 1}]
 }
 ```
@@ -190,7 +217,8 @@ lattigo-stat/
 ```json
 {
   "operation": "percentile",
-  "columns": ["risk_bucket"],
+  "table": "my_dataset",
+  "input_columns": ["risk_bucket"],
   "k": 90
 }
 ```
