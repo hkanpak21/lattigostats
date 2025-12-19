@@ -53,9 +53,12 @@ func NewProfileA() (*Profile, error) {
 	logN := 14
 	slots := 1 << (logN - 1) // N/2
 
-	// Modulus chain for ~20 levels of multiplication (enough for Mean/Var with Newton iteration)
+	// Modulus chain for ~40 levels of multiplication
 	// Prime sizes: 60 bits for Q0, 40 bits for subsequent levels
-	logQ := []int{60, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40}
+	logQ := []int{60}
+	for i := 0; i < 40; i++ {
+		logQ = append(logQ, 40)
+	}
 	logP := []int{60, 60} // Special modulus for key-switching
 
 	params, err := ckks.NewParametersFromLiteral(ckks.ParametersLiteral{

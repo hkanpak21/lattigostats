@@ -131,13 +131,12 @@ type INVNTHSQRTConfig struct {
 }
 
 // DefaultINVConfig returns default config for inverse (n=1)
-// Note: Reduced iterations for Profile A compatibility (limited depth)
 func DefaultINVConfig() INVNTHSQRTConfig {
 	return INVNTHSQRTConfig{
 		N:                  1,
-		Iterations:         8, // Reduced from 25 for Profile A compatibility
-		BootstrapFrequency: 5,
-		InitialGuess:       0.2, // Better initial guess for small counts
+		Iterations:         20,
+		BootstrapFrequency: 10,
+		InitialGuess:       1e-5, // Safe for x up to 100,000
 	}
 }
 
@@ -145,9 +144,9 @@ func DefaultINVConfig() INVNTHSQRTConfig {
 func DefaultINVSQRTConfig() INVNTHSQRTConfig {
 	return INVNTHSQRTConfig{
 		N:                  2,
-		Iterations:         21,
-		BootstrapFrequency: 5,
-		InitialGuess:       0.5,
+		Iterations:         20,
+		BootstrapFrequency: 10,
+		InitialGuess:       1e-5,
 	}
 }
 
@@ -294,51 +293,66 @@ func (n *NumericOp) Variance(xBlocks, vBlocks []*rlwe.Ciphertext) (*rlwe.Ciphert
 		return nil, fmt.Errorf("mean failed: %w", err)
 	}
 
-	// Compute sum(x^2 * v)
-	sumX2V, err := n.MaskedSumOfSquares(xBlocks, vBlocks)
-	if err != nil {
-		return nil, fmt.Errorf("sum of squares failed: %w", err)
+	// Stable two-pass variance: sum((x - mean)^2 * v) / sum(v)
+	var sumSqDiffV *rlwe.Ciphertext
+	for i := range xBlocks {
+		// diff = x - mean
+		diff, err := n.eval.Sub(xBlocks[i], mean)
+		if err != nil {
+			return nil, fmt.Errorf("block %d sub failed: %w", i, err)
+		}
+
+		// diffSq = diff^2
+		diffSq, err := n.eval.Mul(diff, diff)
+		if err != nil {
+			return nil, fmt.Errorf("block %d mul sq failed: %w", i, err)
+		}
+		diffSq, err = n.eval.Rescale(diffSq)
+		if err != nil {
+			return nil, fmt.Errorf("block %d rescale sq failed: %w", i, err)
+		}
+
+		// masked = diffSq * v
+		masked, err := n.eval.Mul(diffSq, vBlocks[i])
+		if err != nil {
+			return nil, fmt.Errorf("block %d mask failed: %w", i, err)
+		}
+		masked, err = n.eval.Rescale(masked)
+		if err != nil {
+			return nil, fmt.Errorf("block %d masked rescale failed: %w", i, err)
+		}
+
+		if sumSqDiffV == nil {
+			sumSqDiffV = masked
+		} else {
+			err = n.eval.AddInPlace(sumSqDiffV, masked)
+			if err != nil {
+				return nil, fmt.Errorf("block %d add failed: %w", i, err)
+			}
+		}
 	}
 
-	// Compute count
+	// sum across slots
+	sum, err := n.eval.SumSlots(sumSqDiffV)
+	if err != nil {
+		return nil, fmt.Errorf("sum slots failed: %w", err)
+	}
+
+	// Divide by count
 	count, err := n.Count(vBlocks)
 	if err != nil {
 		return nil, fmt.Errorf("count failed: %w", err)
 	}
-
-	// Compute 1/count
 	invCount, err := n.INVNTHSQRT(count, DefaultINVConfig())
 	if err != nil {
-		return nil, fmt.Errorf("inverse count failed: %w", err)
+		return nil, fmt.Errorf("inv count failed: %w", err)
 	}
 
-	// E[X^2] = sum(x^2 * v) / count
-	eX2, err := n.eval.Mul(sumX2V, invCount)
+	variance, err := n.eval.Mul(sum, invCount)
 	if err != nil {
-		return nil, fmt.Errorf("E[X^2] mul failed: %w", err)
+		return nil, fmt.Errorf("variance mul failed: %w", err)
 	}
-	eX2, err = n.eval.Rescale(eX2)
-	if err != nil {
-		return nil, fmt.Errorf("E[X^2] rescale failed: %w", err)
-	}
-
-	// mean^2
-	meanSq, err := n.eval.Mul(mean, mean)
-	if err != nil {
-		return nil, fmt.Errorf("mean^2 failed: %w", err)
-	}
-	meanSq, err = n.eval.Rescale(meanSq)
-	if err != nil {
-		return nil, fmt.Errorf("mean^2 rescale failed: %w", err)
-	}
-
-	// var = E[X^2] - E[X]^2
-	variance, err := n.eval.Sub(eX2, meanSq)
-	if err != nil {
-		return nil, fmt.Errorf("variance sub failed: %w", err)
-	}
-
-	return variance, nil
+	return n.eval.Rescale(variance)
 }
 
 // Stdev computes the standard deviation (sqrt of variance)
@@ -412,95 +426,114 @@ func (n *NumericOp) MaskedCrossSum(xBlocks, yBlocks, vBlocks []*rlwe.Ciphertext)
 
 // Correlation computes Pearson correlation between x and y
 // corr = cov(x,y) / (stdev(x) * stdev(y))
-// cov(x,y) = E[XY] - E[X]*E[Y]
-func (n *NumericOp) Correlation(xBlocks, yBlocks, vBlocks []*rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
-	// Compute means
-	meanX, err := n.Mean(xBlocks, vBlocks)
+// cov(x,y) = sum((x - meanX)*(y - meanY) * vX * vY) / sum(vX * vY)
+func (n *NumericOp) Correlation(xBlocks, yBlocks, vxBlocks, vyBlocks []*rlwe.Ciphertext) (*rlwe.Ciphertext, error) {
+	// Intersect validity masks: vCommon = vx * vy
+	vCommon := make([]*rlwe.Ciphertext, len(vxBlocks))
+	for i := range vxBlocks {
+		v, err := n.eval.Mul(vxBlocks[i], vyBlocks[i])
+		if err != nil {
+			return nil, fmt.Errorf("block %d validity intersection failed: %w", i, err)
+		}
+		vCommon[i], err = n.eval.Rescale(v)
+		if err != nil {
+			return nil, fmt.Errorf("block %d validity rescale failed: %w", i, err)
+		}
+	}
+
+	// Compute means using common mask
+	meanX, err := n.Mean(xBlocks, vCommon)
 	if err != nil {
 		return nil, fmt.Errorf("mean x failed: %w", err)
 	}
-	meanY, err := n.Mean(yBlocks, vBlocks)
+	meanY, err := n.Mean(yBlocks, vCommon)
 	if err != nil {
 		return nil, fmt.Errorf("mean y failed: %w", err)
 	}
 
-	// Compute E[XY]
-	sumXY, err := n.MaskedCrossSum(xBlocks, yBlocks, vBlocks)
-	if err != nil {
-		return nil, fmt.Errorf("sum xy failed: %w", err)
-	}
-	count, err := n.Count(vBlocks)
-	if err != nil {
-		return nil, fmt.Errorf("count failed: %w", err)
-	}
-	invCount, err := n.INVNTHSQRT(count, DefaultINVConfig())
-	if err != nil {
-		return nil, fmt.Errorf("inv count failed: %w", err)
-	}
-	eXY, err := n.eval.Mul(sumXY, invCount)
-	if err != nil {
-		return nil, fmt.Errorf("E[XY] mul failed: %w", err)
-	}
-	eXY, err = n.eval.Rescale(eXY)
-	if err != nil {
-		return nil, fmt.Errorf("E[XY] rescale failed: %w", err)
+	// Compute Covariance: sum((x - meanX)*(y - meanY) * v) / count
+	var sumDiffXDiffYV *rlwe.Ciphertext
+	for i := range xBlocks {
+		// dx = x - meanX, dy = y - meanY
+		dx, _ := n.eval.Sub(xBlocks[i], meanX)
+		dy, _ := n.eval.Sub(yBlocks[i], meanY)
+
+		// dxy = dx * dy
+		dxy, err := n.eval.Mul(dx, dy)
+		if err != nil {
+			return nil, err
+		}
+		dxy, err = n.eval.Rescale(dxy)
+		if err != nil {
+			return nil, err
+		}
+
+		// masked = dxy * vCommon
+		masked, err := n.eval.Mul(dxy, vCommon[i])
+		if err != nil {
+			return nil, err
+		}
+		masked, err = n.eval.Rescale(masked)
+		if err != nil {
+			return nil, err
+		}
+
+		if sumDiffXDiffYV == nil {
+			sumDiffXDiffYV = masked
+		} else {
+			n.eval.AddInPlace(sumDiffXDiffYV, masked)
+		}
 	}
 
-	// Compute E[X]*E[Y]
-	eXeY, err := n.eval.Mul(meanX, meanY)
+	sum, err := n.eval.SumSlots(sumDiffXDiffYV)
 	if err != nil {
-		return nil, fmt.Errorf("E[X]*E[Y] failed: %w", err)
-	}
-	eXeY, err = n.eval.Rescale(eXeY)
-	if err != nil {
-		return nil, fmt.Errorf("E[X]*E[Y] rescale failed: %w", err)
+		return nil, err
 	}
 
-	// cov = E[XY] - E[X]*E[Y]
-	cov, err := n.eval.Sub(eXY, eXeY)
+	count, _ := n.Count(vCommon)
+	invCount, _ := n.INVNTHSQRT(count, DefaultINVConfig())
+
+	cov, err := n.eval.Mul(sum, invCount)
 	if err != nil {
-		return nil, fmt.Errorf("cov sub failed: %w", err)
+		return nil, err
+	}
+	cov, err = n.eval.Rescale(cov)
+	if err != nil {
+		return nil, err
 	}
 
-	// Compute variances
-	varX, err := n.Variance(xBlocks, vBlocks)
+	// Compute stdevs using common mask
+	varX, err := n.Variance(xBlocks, vCommon)
 	if err != nil {
-		return nil, fmt.Errorf("var x failed: %w", err)
+		return nil, err
 	}
-	varY, err := n.Variance(yBlocks, vBlocks)
+	varY, err := n.Variance(yBlocks, vCommon)
 	if err != nil {
-		return nil, fmt.Errorf("var y failed: %w", err)
+		return nil, err
 	}
 
-	// Compute 1/sqrt(varX) and 1/sqrt(varY)
 	invSqrtVarX, err := n.INVNTHSQRT(varX, DefaultINVSQRTConfig())
 	if err != nil {
-		return nil, fmt.Errorf("inv sqrt var x failed: %w", err)
+		return nil, fmt.Errorf("invSqrtVarX failed: %w", err)
 	}
 	invSqrtVarY, err := n.INVNTHSQRT(varY, DefaultINVSQRTConfig())
 	if err != nil {
-		return nil, fmt.Errorf("inv sqrt var y failed: %w", err)
+		return nil, fmt.Errorf("invSqrtVarY failed: %w", err)
 	}
 
-	// corr = cov * (1/stdevX) * (1/stdevY) = cov * invSqrtVarX * invSqrtVarY
 	corr, err := n.eval.Mul(cov, invSqrtVarX)
 	if err != nil {
-		return nil, fmt.Errorf("corr mul1 failed: %w", err)
+		return nil, err
 	}
 	corr, err = n.eval.Rescale(corr)
 	if err != nil {
-		return nil, fmt.Errorf("corr rescale1 failed: %w", err)
+		return nil, err
 	}
 	corr, err = n.eval.Mul(corr, invSqrtVarY)
 	if err != nil {
-		return nil, fmt.Errorf("corr mul2 failed: %w", err)
+		return nil, err
 	}
-	corr, err = n.eval.Rescale(corr)
-	if err != nil {
-		return nil, fmt.Errorf("corr rescale2 failed: %w", err)
-	}
-
-	return corr, nil
+	return n.eval.Rescale(corr)
 }
 
 // PlaintextMean computes mean from plaintext values (for validation)

@@ -284,7 +284,8 @@ func runCorrelation(eval *he.Evaluator, store *storage.TableStore, meta *schema.
 	fmt.Printf("  Loading blocks for columns %s and %s...\n", xCol, yCol)
 	xBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
 	yBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
-	vBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	vxBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
+	vyBlocks := make([]*rlwe.Ciphertext, meta.BlockCount)
 
 	for b := 0; b < meta.BlockCount; b++ {
 		var err error
@@ -296,8 +297,11 @@ func runCorrelation(eval *he.Evaluator, store *storage.TableStore, meta *schema.
 		if err != nil {
 			return nil, err
 		}
-		// Use X's validity (assume both columns have same validity)
-		vBlocks[b], err = store.LoadValidity(xCol, b)
+		vxBlocks[b], err = store.LoadValidity(xCol, b)
+		if err != nil {
+			return nil, err
+		}
+		vyBlocks[b], err = store.LoadValidity(yCol, b)
 		if err != nil {
 			return nil, err
 		}
@@ -305,7 +309,7 @@ func runCorrelation(eval *he.Evaluator, store *storage.TableStore, meta *schema.
 
 	numOp := numeric.NewNumericOp(eval)
 	fmt.Println("  Computing correlation...")
-	return numOp.Correlation(xBlocks, yBlocks, vBlocks)
+	return numOp.Correlation(xBlocks, yBlocks, vxBlocks, vyBlocks)
 }
 
 func runBinOp(eval *he.Evaluator, store *storage.TableStore, meta *schema.TableMetadata, job *jobs.JobSpec) (*rlwe.Ciphertext, error) {
@@ -501,52 +505,66 @@ func runLookup(eval *he.Evaluator, store *storage.TableStore, meta *schema.Table
 
 	fmt.Printf("  Looking up %s where %s=%d...\n", job.TargetColumn, job.LookupColumn, job.LookupValue)
 
-	approxOp := approx.NewApproxOp(eval)
-	dezConfig := approx.DefaultDEZConfig(lookupCol.CategoryCount)
+	// Optimization: check if BMV exists for this value
+	// If it does, we can use it directly instead of expensive approximation
+	hasBMV := true
+	for b := 0; b < meta.BlockCount; b++ {
+		bmvPath := filepath.Join(store.BasePath, "bmvs", fmt.Sprintf("%s_v%d_%d.bin", job.LookupColumn, job.LookupValue, b))
+		if _, err := os.Stat(bmvPath); os.IsNotExist(err) {
+			hasBMV = false
+			break
+		}
+	}
 
 	var result *rlwe.Ciphertext
+	if hasBMV {
+		fmt.Println("  Optimization: using pre-computed BMV for lookup")
+		for b := 0; b < meta.BlockCount; b++ {
+			bmv, err := store.LoadBMV(job.LookupColumn, job.LookupValue, b)
+			if err != nil {
+				return nil, err
+			}
+			target, err := store.LoadBlock(job.TargetColumn, b)
+			if err != nil {
+				return nil, err
+			}
+			masked, err := eval.Mul(bmv, target)
+			if err != nil {
+				return nil, err
+			}
+			masked, err = eval.Rescale(masked)
+			if err != nil {
+				return nil, err
+			}
 
-	for b := 0; b < meta.BlockCount; b++ {
-		// Load categorical column
-		catBlock, err := store.LoadBlock(job.LookupColumn, b)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load lookup column block %d: %w", b, err)
+			if result == nil {
+				result = masked
+			} else {
+				eval.AddInPlace(result, masked)
+			}
 		}
+	} else {
+		fmt.Println("  Warning: BMV not found. Falling back to expensive DISCRETEEQUALZERO approximation...")
+		approxOp := approx.NewApproxOp(eval)
+		dezConfig := approx.DefaultDEZConfig(lookupCol.CategoryCount)
 
-		// Load target column
-		targetBlock, err := store.LoadBlock(job.TargetColumn, b)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load target column block %d: %w", b, err)
-		}
+		for b := 0; b < meta.BlockCount; b++ {
+			catBlock, _ := store.LoadBlock(job.LookupColumn, b)
+			targetBlock, _ := store.LoadBlock(job.TargetColumn, b)
 
-		// Compute cat - value
-		catMinus, err := eval.AddConst(catBlock, complex(float64(-job.LookupValue), 0))
-		if err != nil {
-			return nil, fmt.Errorf("cat minus block %d failed: %w", b, err)
-		}
+			catMinus, _ := eval.AddConst(catBlock, complex(float64(-job.LookupValue), 0))
+			eq, err := approxOp.DISCRETEEQUALZERO(catMinus, dezConfig)
+			if err != nil {
+				return nil, err
+			}
 
-		// Compute equality indicator
-		eq, err := approxOp.DISCRETEEQUALZERO(catMinus, dezConfig)
-		if err != nil {
-			return nil, fmt.Errorf("equality check block %d failed: %w", b, err)
-		}
+			masked, _ := eval.Mul(eq, targetBlock)
+			masked, _ = eval.Rescale(masked)
 
-		// Multiply equality by target
-		masked, err := eval.Mul(eq, targetBlock)
-		if err != nil {
-			return nil, fmt.Errorf("mask block %d failed: %w", b, err)
-		}
-		masked, err = eval.Rescale(masked)
-		if err != nil {
-			return nil, fmt.Errorf("mask rescale block %d failed: %w", b, err)
-		}
-
-		// Accumulate
-		if result == nil {
-			result = masked
-		} else {
-			if err := eval.AddInPlace(result, masked); err != nil {
-				return nil, fmt.Errorf("accumulate block %d failed: %w", b, err)
+			if result == nil {
+				result = masked
+			} else {
+				eval.AddInPlace(result, masked)
 			}
 		}
 	}

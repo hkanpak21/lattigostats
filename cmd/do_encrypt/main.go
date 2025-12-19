@@ -207,7 +207,7 @@ func main() {
 			fmt.Printf("    Generating BMVs for %d categories\n", col.CategoryCount)
 			idx := colIndex[col.Name]
 
-			for catVal := 1; catVal <= col.CategoryCount; catVal++ {
+			for catVal := 0; catVal < col.CategoryCount; catVal++ {
 				for b := 0; b < blockCount; b++ {
 					startRow := b * slots
 					endRow := startRow + slots

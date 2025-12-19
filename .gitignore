@@ -3,6 +3,7 @@ bin/
 
 # Keys
 keys/
+keys_cc/
 
 # Data
 data.csv
